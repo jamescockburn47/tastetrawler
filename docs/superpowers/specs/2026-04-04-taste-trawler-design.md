@@ -336,8 +336,9 @@ The architecture treats Vinted automation as an accelerator, not a dependency.
 ### Background Agents
 
 - Vercel Cron Jobs trigger the harvester and scanner on schedule.
-- Browser automation runs via an external headless browser service (Browserbase or similar) called from Vercel Serverless Functions. Vercel Functions have a max execution time of 800s with Fluid Compute — sufficient for focused scraping tasks, but the browser session itself is managed externally to avoid timeout issues on longer multi-page crawls.
-- Alternative: Playwright running in a long-lived process on a cheap VPS (Hetzner, ~£4/month) if Browserbase costs are too high. The Vercel app calls the VPS API to trigger agent runs.
+- Browser automation runs on an existing VPS via Playwright with persistent browser contexts (Vinted session stays logged in between runs). The Vercel app triggers agent runs via API calls to the VPS. This avoids Vercel Functions timeout limits (800s max) and gives full control over session persistence, timing, and anti-detection measures.
+- The VPS hosts a lightweight API (Express/Hono) that accepts agent commands (harvest, scan, publish) and reports results back to the Vercel app's webhook endpoint.
+- Playwright persistent contexts keep Vinted cookies alive between runs, reducing login frequency and detection risk.
 - Agents run independently of her device — results are waiting when she opens the app.
 
 ### Cost Summary
@@ -352,7 +353,7 @@ The architecture treats Vinted automation as an accelerator, not a dependency.
 | Gemini Flash vision (est. 2,000 images/month) | £0.40 |
 | Gemini Flash language (descriptions, scoring) | £2-5 |
 | Claude / Gemini via existing subscriptions | £0 (covered) |
-| Vercel Functions compute (agents) | £0-5 |
+| VPS (existing, repurposed for browser agents) | £0 (already owned) |
 | **Total estimated** | **£5-15/month** |
 
 Well within £40/month budget with substantial headroom for scaling.
