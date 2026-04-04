@@ -14,7 +14,7 @@ The user is a part-time Vinted seller currently making ~£300/month profit from 
 
 1. **She curates, the system operates.** The hunt and the eye stay human. Research, descriptions, pricing, tracking, and sourcing discovery are automated.
 2. **Learn her voice, not a generic one.** Descriptions, pricing instincts, and aesthetic preferences are learned from her specific history.
-3. **Phone for capture and browsing, laptop for management.** Two modes, same app, responsive.
+3. **WhatsApp for field work, web app for management.** WhatsApp is the primary capture interface (she's already in a charity shop with her phone). The web app handles dashboard, inventory, and batch operations.
 4. **Transparent AI.** Every suggestion shows its reasoning — why this price, why this item matched, what the comps are. No black boxes.
 5. **Clean, typographic UI.** Monospace numbers, clear hierarchy, no decorative clutter. Dark mode. Geist typeface. The data speaks.
 
@@ -251,95 +251,172 @@ Performance by sourcing channel:
 
 ---
 
-## 6. Computer Use Agent Architecture
+## 6. WhatsApp Interface (Field Mode)
 
-Three server-side agents running on Vercel Functions with Cron scheduling.
+The WhatsApp interface is the primary capture and evaluation tool. MG already uses Clawd (the existing WhatsApp AI assistant) — Taste Trawler adds a set of resale-specific tools to the existing Clawd instance running on the VPS.
 
-### Agent 1: Vinted Harvester
+### Conversations
 
-**Schedule:** Twice daily (configurable).
-**Purpose:** Keep the database in sync with her Vinted account.
+All Taste Trawler interactions happen in MG's existing WhatsApp DM with Clawd. The smart router classifies messages and routes to the appropriate Taste Trawler tool.
 
-Process:
-1. Launch headless browser with persisted Vinted session cookies (stored encrypted in Neon Postgres).
-2. Navigate to her profile / sold items / active listings.
-3. Extract: item photos, titles, descriptions, sale prices, listing dates, sold dates, view counts, like counts.
-4. Diff against database — update changed items, insert new ones.
-5. Flag newly stale items (14+ days, low engagement).
-6. If session expired, flag for re-authentication (she re-logs in via the app, cookies are re-captured).
+### Core WhatsApp Flows
 
-Anti-detection measures:
-- Random delays between actions (2-8 seconds).
-- Natural scroll patterns.
-- Realistic viewport size and user agent.
-- Session cookies persisted to avoid repeated logins.
-- Low frequency (2x daily, not continuous).
+**Photo Evaluation (in the charity shop)**
+She sends a photo of an item. Clawd responds with:
+- Brand identification (if detectable from labels/design)
+- Category, era, condition assessment
+- Taste match score (how well it fits her selling profile)
+- Comparable sold prices from eBay/Vinted
+- Estimated margin at various buy prices
+- Recommendation: buy / pass / only if under £X
 
-### Agent 2: Opportunity Scanner
+**Quick List**
+She sends a photo + "list this" (or responds "list" after an evaluation). Clawd:
+- Generates full listing (title, description in her voice, category, suggested price)
+- Saves to Taste Trawler inventory as a draft
+- Sends her a summary: "Saved: Coach saddle bag, suggested £62. Review in the app when you're ready."
 
-**Schedule:** Twice daily + on-demand.
-**Purpose:** Find items matching her taste profile across all sources.
+**Opportunity Alerts**
+Clawd proactively messages her when a high-scoring opportunity is found:
+- "Found a Mulberry scarf on eBay BHF store for £8. Your taste match: 92%. Similar sold for £45-60. Link: [url]"
+- Frequency capped (max 3 per day, configurable) to avoid notification fatigue.
 
-Process:
-1. **eBay** (official API): Query Browse API with taste-profile-derived keywords. Filter by charity shop eBay sellers. Retrieve active listings with photos and prices.
-2. **Vinted** (computer use): Browse configured categories. Filter by price range and keywords derived from taste profile.
-3. **Score each item**: Send photos to Gemini Flash for visual analysis. Compare extracted attributes against her taste profile vectors. Calculate estimated sell price from eBay comps. Compute estimated margin and sell speed.
-4. Rank by composite score: taste_match * 0.4 + estimated_margin * 0.3 + story_potential * 0.2 + market_timing * 0.1
-5. Push top-scoring items to opportunity feed.
+**Quick Stats**
+- "How am I doing?" → P&L snapshot for current period
+- "What's stale?" → list of items needing attention with AI suggestions
+- "What's trending?" → top opportunity feed highlights
 
-### Agent 3: Listing Publisher (Phase 2)
+### Integration with Clawd
 
-**Trigger:** User approves a listing and clicks "Publish to Vinted."
-**Purpose:** Automate the Vinted listing form fill.
+Taste Trawler tools are added to Clawd's existing tool definitions (`tools/definitions.js`):
 
-Process:
-1. Launch headless browser with Vinted session.
-2. Navigate to "Sell an item" form.
-3. Upload photos from Vercel Blob storage.
-4. Fill title, description, category, brand, condition, price from the approved listing data.
-5. Pause — send notification to the user: "Listing ready for review on Vinted."
-6. User opens Vinted, reviews the pre-filled form, and submits manually (Phase 2a) or confirms in Taste Trawler and the agent clicks submit (Phase 2b).
+| Tool | Purpose |
+|------|---------|
+| `tt_evaluate_item` | Analyse photo(s), return taste match + pricing intelligence |
+| `tt_quick_list` | Generate listing from photos, save to inventory |
+| `tt_opportunity_alert` | Push high-scoring find to WhatsApp |
+| `tt_stats` | Return P&L summary for period |
+| `tt_stale_items` | List items needing attention |
+| `tt_search_comps` | Search eBay/Vinted for comparable items |
+| `tt_add_buy_price` | Record what she paid for an item |
 
-Phase 1 (MVP): no agent. Listing data is formatted and copied to clipboard. She pastes into Vinted manually. This works from day one with zero Vinted automation risk.
+These tools call the Taste Trawler API (Vercel app) for database operations and the eBay Browse API directly for price research. Vision analysis uses the existing Clawd image routing (EVO local vision first, cloud fallback).
 
-### Fallback Strategy
+### Access Control
 
-Vinted's computer use access is inherently fragile. The system must work without it:
-- **If harvester is blocked**: manual import mode. She screenshots her Vinted sold page, AI extracts data from the screenshots via vision. Slower but functional.
-- **If scanner is blocked on Vinted**: eBay-only scanning still works (official API). Vinted opportunities require manual browsing with the app as a research companion.
-- **If publisher is blocked**: clipboard copy (Phase 1) is always available.
-
-The architecture treats Vinted automation as an accelerator, not a dependency.
+MG already has limited Clawd access (calendar, todos, travel, web search). Taste Trawler tools are added to her allowed tool set. James retains full access to all tools plus admin/debug capabilities.
 
 ---
 
-## 7. Deployment & Access
+## 7. VPS Agent Architecture (Clawd-Derived)
 
-### Hosting
+The VPS agent is a fork of the existing Clawd system with browser automation capabilities added alongside WhatsApp. It retains Clawd's core machinery and adds Taste Trawler-specific tools and Playwright browser automation.
 
-- **Vercel** — auto-deploy from GitHub on push. Free tier covers all compute needs at this scale.
-- **URL**: `tastetrawler.vercel.app` or custom domain (e.g., `tastetrawler.co.uk`).
-- **SSL**: automatic via Vercel.
+### What Transfers from Clawd
 
-### Device Access
+| Subsystem | Purpose in Taste Trawler |
+|-----------|------------------------|
+| Tool loop (claude.js) | Multi-step browser workflows with tool calling |
+| Task planner | Dependency-aware execution for complex scraping sequences |
+| Memory service | Learns effective search queries, browsing patterns, session state |
+| Trace system | Logs every agent run for debugging when Vinted changes |
+| HTTP server | API endpoint for Vercel app to trigger runs and receive results |
+| Smart router | Routes WhatsApp messages to Taste Trawler tools vs regular Clawd tools |
+| Image routing | EVO local vision (Qwen3-VL) for fast photo analysis, Claude fallback |
+| Self-improvement | Evolution pipeline can optimise scraping strategies over time |
 
-- **Phone**: open URL in mobile browser. Add to home screen for app-like experience (PWA manifest with icon, splash screen, standalone display mode). Mobile views optimised for touch: swipe on opportunity feed, camera capture in listing workbench.
-- **Laptop**: same URL, responsive layout expands to dashboard/workbench views with side panels and tables.
-- No native app. No app store. No installation beyond bookmarking.
+### What Gets Added
+
+| Component | Purpose |
+|-----------|---------|
+| Playwright persistent contexts | Vinted session management (cookies stay warm between runs) |
+| `tt_harvest_profile` tool | Scrape Vinted sold history and active listing stats |
+| `tt_scan_vinted` tool | Browse Vinted categories for underpriced items |
+| `tt_scan_ebay` tool | Query eBay Browse API for opportunities |
+| `tt_scan_charity` tool | Monitor charity shop eBay stores |
+| `tt_publish_listing` tool | Fill Vinted listing form via Playwright (Phase 2) |
+| `tt_score_item` tool | Run taste engine scoring on a candidate item |
+| Cron triggers | Schedule harvester and scanner runs |
+
+### Three Agent Modes
+
+**Harvester** — runs twice daily via cron. Uses Playwright persistent context to browse her Vinted profile. Extracts sold history, active listing stats (views, likes), syncs to Neon Postgres via the Vercel app API. Clawd's task planner handles the multi-page navigation with adaptive replanning if page structure changes.
+
+**Opportunity Scanner** — runs twice daily + on-demand (triggered from WhatsApp or web app). eBay via official API (direct call, no browser needed). Vinted via Playwright. Charity shops via eBay seller filter. Each found item scored by the taste engine (Gemini Flash vision + profile comparison). High scorers pushed to the opportunity feed and optionally sent as WhatsApp alerts.
+
+Scoring formula: `taste_match * 0.4 + estimated_margin * 0.3 + story_potential * 0.2 + market_timing * 0.1`
+
+**Listing Publisher (Phase 2)** — triggered when she approves a listing. Playwright opens Vinted's "Sell an item" form, uploads photos, fills all fields, then pauses. She gets a WhatsApp message: "Listing ready for review on Vinted. Open and submit when happy." Phase 1 (MVP): clipboard copy, no browser automation.
+
+### Anti-Detection
+
+- Playwright persistent contexts keep Vinted session warm (no repeated logins)
+- Random delays between actions (2-8 seconds) — Clawd's existing delay utilities
+- Natural scroll patterns, realistic viewport and user agent
+- Low frequency (2x daily, not continuous)
+- If DataDome blocks: Clawd's trace system logs the failure, and the evolution pipeline can propose scraping strategy adjustments
+
+### Fallback Strategy
+
+Vinted automation is an accelerator, not a dependency:
+- **Harvester blocked** → WhatsApp fallback: she screenshots her Vinted sold page, sends to Clawd, vision AI extracts the data
+- **Scanner blocked on Vinted** → eBay-only scanning still works (official API). She browses Vinted manually with Clawd as a research companion via WhatsApp
+- **Publisher blocked** → clipboard copy (Phase 1) always available
+
+### VPS Infrastructure
+
+The existing VPS already runs Clawd. Taste Trawler adds:
+- Playwright installation + browser binary
+- Persistent browser context storage directory
+- Taste Trawler tool definitions added to Clawd's tool registry
+- Cron entries for harvester and scanner schedules
+- API endpoints for the Vercel web app to trigger runs and query results
+
+---
+
+## 8. Deployment & Access
+
+### Two-System Architecture
+
+```
+┌─ Vercel (Web App) ──────────────────────┐
+│  Next.js 16 + shadcn/ui                │
+│  Dashboard, Listing Workbench, Feed     │
+│  Neon Postgres (database)               │
+│  Vercel Blob (photo storage)            │
+│  Vercel Cron (triggers VPS agents)      │
+│  Clerk (auth)                           │
+│  AI Gateway (Gemini Flash routing)      │
+└────────────── calls ───────────────────→┘
+                  ↓
+┌─ VPS (Clawd + Taste Trawler Agent) ────┐
+│  Clawd (existing WhatsApp bot)          │
+│  + Taste Trawler tools                  │
+│  + Playwright (Vinted browser agent)    │
+│  + eBay Browse API client               │
+│  + EVO local vision (if on same VPS)    │
+│  HTTP API for Vercel ↔ VPS comms        │
+└─────────────────────────────────────────┘
+```
+
+### Access Points
+
+- **WhatsApp** (primary field tool) — she messages Clawd directly. Already set up, already familiar. Taste Trawler tools route automatically via the smart router.
+- **Web app** — `tastetrawler.vercel.app` or custom domain. Phone (add to home screen, PWA) for opportunity feed swiping. Laptop for dashboard, batch listing, inventory management.
+- No additional apps to install. Two interfaces she already uses (WhatsApp + browser).
 
 ### Authentication
 
-- Clerk via Vercel Marketplace (free tier, single user).
-- Simple email/password or magic link login.
-- Single-user system — no multi-tenancy complexity.
+- **Web app**: Clerk via Vercel Marketplace (free tier, single user). Magic link login.
+- **WhatsApp**: already authenticated — MG is a registered user in Clawd's access control.
 
 ### Background Agents
 
-- Vercel Cron Jobs trigger the harvester and scanner on schedule.
-- Browser automation runs on an existing VPS via Playwright with persistent browser contexts (Vinted session stays logged in between runs). The Vercel app triggers agent runs via API calls to the VPS. This avoids Vercel Functions timeout limits (800s max) and gives full control over session persistence, timing, and anti-detection measures.
-- The VPS hosts a lightweight API (Express/Hono) that accepts agent commands (harvest, scan, publish) and reports results back to the Vercel app's webhook endpoint.
-- Playwright persistent contexts keep Vinted cookies alive between runs, reducing login frequency and detection risk.
-- Agents run independently of her device — results are waiting when she opens the app.
+- VPS runs all browser automation (Playwright) and scheduled tasks.
+- Vercel Cron triggers the VPS agent API on schedule (harvester 2x daily, scanner 2x daily).
+- VPS reports results back to Vercel app via webhook.
+- WhatsApp alerts sent directly from the VPS (Clawd's existing Baileys connection).
+- Agents run independently of her device — results waiting in the web app and WhatsApp.
 
 ### Cost Summary
 
@@ -402,36 +479,45 @@ Well within £40/month budget with substantial headroom for scaling.
 
 ---
 
-## 9. Phased Delivery
+## 10. Phased Delivery
 
 ### Phase 1: Foundation (MVP)
-- Next.js app with auth, deployed on Vercel
-- Manual item entry: photo upload → AI processing → listing generation
+- Next.js web app with Clerk auth, deployed on Vercel
+- Neon Postgres database + Vercel Blob photo storage
+- Manual item entry: photo upload → AI processing (Gemini Flash) → listing generation
 - Pricing intelligence from eBay Browse API
 - Inventory tracker with P&L dashboard
 - Clipboard copy for Vinted listings
 - Basic taste profile from manually entered items
+- **WhatsApp: `tt_evaluate_item` tool** — she sends a photo to Clawd, gets instant analysis and pricing. This is the day-one killer feature.
+- **WhatsApp: `tt_quick_list` tool** — photo + "list this" saves a draft to the web app
+- **WhatsApp: `tt_stats` tool** — quick P&L summary
 
 ### Phase 2: Vinted Integration
-- Computer use harvester: sync sold history and active listing stats
-- Full taste profile built from historical data
+- Playwright installed on VPS with persistent browser contexts
+- Vinted harvester agent: sync sold history and active listing stats
+- Full taste profile built from historical data (visual DNA, voice learning)
 - Dead stock revival suggestions for stale items
+- **WhatsApp: `tt_stale_items` tool** — "what needs attention?"
 
 ### Phase 3: Opportunity Engine
 - eBay opportunity scanner (official API)
-- Vinted opportunity scanner (computer use)
+- Vinted opportunity scanner (Playwright)
 - Charity shop eBay store monitoring
-- Opportunity feed with swipe interface
+- Opportunity feed with swipe interface in web app
 - Taste match scoring and margin estimation
+- **WhatsApp: opportunity alerts** — top finds pushed proactively (max 3/day)
+- **WhatsApp: `tt_search_comps` tool** — "what are Coach bags selling for?"
 
 ### Phase 4: Automation
-- Listing publisher via computer use (Vinted form fill)
+- Listing publisher via Playwright (Vinted form fill, Phase 2a: she submits, Phase 2b: agent submits)
 - Automated repricing suggestions with one-click apply
 - Trend monitoring and seasonal timing advice
-- Morning catch-of-the-day notifications
+- Morning catch-of-the-day WhatsApp summary
 
 ### Phase 5: Scale
 - Additional source connectors (Depop, clearance sites)
 - Bundle suggestion engine
-- Multi-item photography workflow
+- Batch photography workflow (web app)
 - Performance analytics and sourcing ROI tracking
+- Evolution pipeline: agent self-optimises scraping strategies based on trace analysis
