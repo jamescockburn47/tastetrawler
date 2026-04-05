@@ -2,6 +2,7 @@
 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
+import { EmptyState } from '@/components/empty-state';
 import type { Item } from '@/lib/db/schema';
 
 function formatPence(pence: number | null): string {
@@ -19,6 +20,16 @@ const statusColour: Record<string, string> = {
 };
 
 export function ItemTable({ items }: { items: Item[] }) {
+  if (!items?.length) {
+    return (
+      <EmptyState
+        title="Empty rails."
+        description="No items match this filter yet. Add one from the bot, or change the status tab."
+        illustration={<span aria-hidden>📦</span>}
+      />
+    );
+  }
+
   return (
     <Table>
       <TableHeader>
@@ -35,7 +46,10 @@ export function ItemTable({ items }: { items: Item[] }) {
       </TableHeader>
       <TableBody>
         {items.map((item) => (
-          <TableRow key={item.id}>
+          <TableRow
+            key={item.id}
+            className="group border-b border-border transition-colors hover:bg-accent/40 focus-within:bg-accent/40"
+          >
             <TableCell>
               {item.photos.length > 0 ? (
                 <img src={item.photos[0]} alt="" className="h-8 w-8 rounded object-cover" />
@@ -45,18 +59,13 @@ export function ItemTable({ items }: { items: Item[] }) {
             </TableCell>
             <TableCell className="max-w-[200px] truncate text-sm">{item.title || 'Untitled'}</TableCell>
             <TableCell><Badge variant={statusColour[item.status] as any} className="text-[10px]">{item.status}</Badge></TableCell>
-            <TableCell className="text-right font-mono text-sm">{formatPence(item.buyPrice)}</TableCell>
-            <TableCell className="text-right font-mono text-sm">{formatPence(item.listPrice)}</TableCell>
-            <TableCell className="text-right font-mono text-sm">{formatPence(item.soldPrice)}</TableCell>
-            <TableCell className="text-right font-mono text-sm text-muted-foreground">{daysSince(item.listedAt)}</TableCell>
-            <TableCell className="text-right font-mono text-sm text-muted-foreground">{item.views}</TableCell>
+            <TableCell className="text-right font-mono text-sm [font-feature-settings:'tnum']">{formatPence(item.buyPrice)}</TableCell>
+            <TableCell className="text-right font-mono text-sm [font-feature-settings:'tnum']">{formatPence(item.listPrice)}</TableCell>
+            <TableCell className="text-right font-mono text-sm [font-feature-settings:'tnum']">{formatPence(item.soldPrice)}</TableCell>
+            <TableCell className="text-right font-mono text-sm text-muted-foreground [font-feature-settings:'tnum']">{daysSince(item.listedAt)}</TableCell>
+            <TableCell className="text-right font-mono text-sm text-muted-foreground [font-feature-settings:'tnum']">{item.views}</TableCell>
           </TableRow>
         ))}
-        {items.length === 0 && (
-          <TableRow>
-            <TableCell colSpan={8} className="py-8 text-center text-sm text-muted-foreground">No items yet. Head to the Workbench to add your first item.</TableCell>
-          </TableRow>
-        )}
       </TableBody>
     </Table>
   );
