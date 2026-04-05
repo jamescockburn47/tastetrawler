@@ -15,7 +15,7 @@ interface ListingEditorProps {
   category: string;
   condition: string;
   suggestedPrice: number | null;
-  onSave: (data: { title: string; description: string; listPrice: number; buyPrice: number | null; status: string }) => void;
+  onSave: (data: { title: string; description: string; listPrice: number; buyPrice: number | null; status: string }) => Promise<void> | void;
   onCopyToClipboard: () => void;
   saving: boolean;
 }

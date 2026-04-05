@@ -1,7 +1,6 @@
 'use client';
 
 import { useCallback, useState } from 'react';
-import { Button } from '@/components/ui/button';
 
 interface PhotoUploadProps {
   onUpload: (urls: string[]) => void;

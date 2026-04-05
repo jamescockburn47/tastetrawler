@@ -39,16 +39,23 @@ export default function WorkbenchPage() {
 
   async function handleSave(data: { title: string; description: string; listPrice: number; buyPrice: number | null; status: string }) {
     setSaving(true);
-    await fetch('/api/items', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ...data, photos, brand: analysis?.brand, category: analysis?.category, condition: analysis?.condition, era: analysis?.era, colours: analysis?.colours, styleTags: analysis?.styleTags, material: analysis?.material, size: analysis?.size, storyPotentialScore: analysis?.storyPotentialScore }),
-    });
-    setSaving(false);
-    setStage('upload');
-    setPhotos([]);
-    setAnalysis(null);
-    setListing(null);
-    setComps([]);
+    try {
+      const res = await fetch('/api/items', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...data, photos, brand: analysis?.brand, category: analysis?.category, condition: analysis?.condition, era: analysis?.era, colours: analysis?.colours, styleTags: analysis?.styleTags, material: analysis?.material, size: analysis?.size, storyPotentialScore: analysis?.storyPotentialScore }),
+      });
+      if (!res.ok) {
+        const body = await res.text().catch(() => '');
+        throw new Error(`HTTP ${res.status}${body ? `: ${body.slice(0, 120)}` : ''}`);
+      }
+      setStage('upload');
+      setPhotos([]);
+      setAnalysis(null);
+      setListing(null);
+      setComps([]);
+    } finally {
+      setSaving(false);
+    }
   }
 
   function handleCopyToClipboard() {
