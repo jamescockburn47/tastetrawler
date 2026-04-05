@@ -47,5 +47,13 @@ Return ONLY valid JSON, no markdown wrapping.`,
     ],
   });
 
-  return JSON.parse(text) as PhotoAnalysis;
+  // Gemini occasionally wraps JSON in markdown fences despite the prompt
+  // saying not to. Strip them before parsing.
+  const cleaned = text
+    .trim()
+    .replace(/^```(?:json)?\s*/i, '')
+    .replace(/\s*```$/, '')
+    .trim();
+
+  return JSON.parse(cleaned) as PhotoAnalysis;
 }
