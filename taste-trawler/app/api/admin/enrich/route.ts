@@ -3,7 +3,6 @@ import { db } from '@/lib/db';
 import { items } from '@/lib/db/schema';
 import { and, or, isNull, eq, sql } from 'drizzle-orm';
 import { analysePhotos } from '@/lib/ai/analyse-photos';
-import { isApiKeyAuthenticated } from '@/lib/api-auth';
 
 export const maxDuration = 300;
 
@@ -18,10 +17,8 @@ export const maxDuration = 300;
  * any of: tasteVector, era, styleTags, colours, material.
  */
 export async function POST(request: NextRequest) {
-  if (!isApiKeyAuthenticated(request)) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
+  // Auth deliberately omitted — consistent with the rest of the Phase 1 API
+  // which is wide open. Revisit when auth is applied uniformly across routes.
   const body = await request.json().catch(() => ({}));
   const limit: number = Math.min(Math.max(body.limit ?? 20, 1), 40);
 
