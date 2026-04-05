@@ -22,38 +22,26 @@ export async function POST(request: NextRequest) {
   const body = await request.json().catch(() => ({}));
   const limit: number = Math.min(Math.max(body.limit ?? 20, 1), 40);
 
-  // Items with photos but missing derived fields.
-  // `photos` is jsonb; `jsonb_array_length > 0` filters out empty arrays.
-  const candidates = await db
-    .select()
-    .from(items)
-    .where(
-      and(
-        sql`jsonb_array_length(${items.photos}) > 0`,
-        or(
-          isNull(items.tasteVector),
-          isNull(items.era),
-          sql`${items.styleTags} = '[]'::jsonb`,
-          sql`${items.colours} = '[]'::jsonb`,
-        ),
-      ),
-    )
-    .limit(limit);
+  // Items with real photos but missing derived fields.
+  // `photos` is jsonb; require at least one URL AND exclude seed data
+  // whose first photo points at example.com.
+  const whereClause = and(
+    sql`jsonb_array_length(${items.photos}) > 0`,
+    sql`${items.photos}->>0 NOT LIKE '%example.com%'`,
+    or(
+      isNull(items.tasteVector),
+      isNull(items.era),
+      sql`${items.styleTags} = '[]'::jsonb`,
+      sql`${items.colours} = '[]'::jsonb`,
+    ),
+  );
+
+  const candidates = await db.select().from(items).where(whereClause).limit(limit);
 
   const total = await db
     .select({ n: sql<number>`count(*)::int` })
     .from(items)
-    .where(
-      and(
-        sql`jsonb_array_length(${items.photos}) > 0`,
-        or(
-          isNull(items.tasteVector),
-          isNull(items.era),
-          sql`${items.styleTags} = '[]'::jsonb`,
-          sql`${items.colours} = '[]'::jsonb`,
-        ),
-      ),
-    );
+    .where(whereClause);
   const remainingBefore = total[0]?.n ?? 0;
 
   let enriched = 0;
