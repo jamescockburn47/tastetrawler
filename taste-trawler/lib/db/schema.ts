@@ -54,6 +54,36 @@ export const comparableSales = pgTable('comparable_sales', {
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
 
+/**
+ * chat_images — every photo MG or James sends through the WhatsApp bot.
+ *
+ * The bot captures on sight (trigger or no trigger), uploads the bytes to
+ * Vercel Blob, runs VLM analysis, and writes a row here. This is both
+ * (a) a searchable index the bot can recall from later ("remember that
+ * ceramic bowl?") and (b) a human-readable gallery on the website.
+ *
+ * `discussion` accretes: each time the bot answers a question that touches
+ * this image, the reply gets appended so MG has a log of what was said.
+ */
+export const chatImages = pgTable('chat_images', {
+  id: text('id').primaryKey().$defaultFn(() => createId()),
+  blobUrl: text('blob_url').notNull(),
+  vlmDescription: text('vlm_description').notNull().default(''),
+  caption: text('caption'),
+  jid: text('jid').notNull(),
+  speakerName: text('speaker_name'),
+  speakerId: text('speaker_id'),
+  isGroup: text('is_group').notNull().default('false'),
+  observedAt: timestamp('observed_at').defaultNow().notNull(),
+  respondedAt: timestamp('responded_at'),
+  discussion: text('discussion').notNull().default(''),
+  // Free-form labels lifted from the VLM description for cheap keyword recall
+  tags: jsonb('tags').$type<string[]>().default([]),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
 export type Item = typeof items.$inferSelect;
 export type NewItem = typeof items.$inferInsert;
 export type ComparableSale = typeof comparableSales.$inferSelect;
+export type ChatImage = typeof chatImages.$inferSelect;
+export type NewChatImage = typeof chatImages.$inferInsert;
