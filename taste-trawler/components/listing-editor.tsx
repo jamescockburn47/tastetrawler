@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { toast } from 'sonner';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
@@ -51,7 +52,24 @@ export function ListingEditor({ title: initialTitle, description: initialDescrip
         </div>
       </div>
       <div className="flex gap-2">
-        <Button onClick={() => onSave({ title, description, listPrice: Math.round(parseFloat(listPrice) * 100), buyPrice: buyPrice ? Math.round(parseFloat(buyPrice) * 100) : null, status: 'draft' })} disabled={saving} className="flex-1">
+        <Button
+          onClick={async () => {
+            try {
+              await onSave({
+                title,
+                description,
+                listPrice: Math.round(parseFloat(listPrice) * 100),
+                buyPrice: buyPrice ? Math.round(parseFloat(buyPrice) * 100) : null,
+                status: 'draft',
+              });
+              toast.success('Item added to inventory.');
+            } catch (err) {
+              toast.error('Failed to save item. Please try again.');
+            }
+          }}
+          disabled={saving}
+          className="flex-1"
+        >
           {saving ? 'Saving...' : 'Add to Inventory'}
         </Button>
         <Button variant="outline" onClick={onCopyToClipboard}>Copy for Vinted</Button>

@@ -5,6 +5,7 @@ import { PhotoUpload } from '@/components/photo-upload';
 import { ListingEditor } from '@/components/listing-editor';
 import { PricingPanel } from '@/components/pricing-panel';
 import { Button } from '@/components/ui/button';
+import { PageContainer, PageHeader } from '@/components/page-container';
 
 type Stage = 'upload' | 'analysing' | 'editing';
 
@@ -56,24 +57,29 @@ export default function WorkbenchPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <h1 className="text-lg font-semibold">Workbench</h1>
-      {stage === 'upload' && (
-        <div className="space-y-4">
-          <PhotoUpload onUpload={setPhotos} />
-          {photos.length > 0 && <Button onClick={handleAnalyse}>Analyse & Generate Listing</Button>}
-        </div>
-      )}
-      {stage === 'analysing' && <p className="text-sm text-muted-foreground">Analysing photos and generating listing...</p>}
-      {stage === 'editing' && listing && analysis && (
-        <div className="grid gap-6 lg:grid-cols-2">
+    <PageContainer>
+      <PageHeader
+        title="Workbench"
+        description="Draft, price, and photo-edit an item before it goes live."
+      />
+      <div className="space-y-6">
+        {stage === 'upload' && (
           <div className="space-y-4">
-            <PhotoUpload onUpload={setPhotos} existingPhotos={photos} />
-            <PricingPanel comps={comps} suggestedPrice={listing.suggestedPrice} priceReasoning={listing.priceReasoning} buyPrice={null} />
+            <PhotoUpload onUpload={setPhotos} />
+            {photos.length > 0 && <Button onClick={handleAnalyse}>Analyse & Generate Listing</Button>}
           </div>
-          <ListingEditor title={listing.title} description={listing.description} brand={analysis.brand} category={listing.category} condition={analysis.condition} suggestedPrice={listing.suggestedPrice} onSave={handleSave} onCopyToClipboard={handleCopyToClipboard} saving={saving} />
-        </div>
-      )}
-    </div>
+        )}
+        {stage === 'analysing' && <p className="text-sm text-muted-foreground">Analysing photos and generating listing...</p>}
+        {stage === 'editing' && listing && analysis && (
+          <div className="grid gap-6 lg:grid-cols-2">
+            <div className="space-y-4">
+              <PhotoUpload onUpload={setPhotos} existingPhotos={photos} />
+              <PricingPanel comps={comps} suggestedPrice={listing.suggestedPrice} priceReasoning={listing.priceReasoning} buyPrice={null} />
+            </div>
+            <ListingEditor title={listing.title} description={listing.description} brand={analysis.brand} category={listing.category} condition={analysis.condition} suggestedPrice={listing.suggestedPrice} onSave={handleSave} onCopyToClipboard={handleCopyToClipboard} saving={saving} />
+          </div>
+        )}
+      </div>
+    </PageContainer>
   );
 }
