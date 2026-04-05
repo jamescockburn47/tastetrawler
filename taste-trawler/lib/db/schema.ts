@@ -82,8 +82,34 @@ export const chatImages = pgTable('chat_images', {
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
 
+/**
+ * theme_settings — one row per theme ('malibu' | 'leopard'). `dials` is
+ * the current JSONB blob validated against lib/theme-dials.ts schema.
+ * Written by the VPS bot via /api/theme/adjust (phase 4) and by James
+ * via admin UI (not yet built).
+ */
+export const themeSettings = pgTable('theme_settings', {
+  themeName: text('theme_name').primaryKey(),
+  dials: jsonb('dials').$type<Record<string, unknown>>().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+  updatedBy: text('updated_by'), // 'mg' | 'james' | 'bot'
+});
+
+/**
+ * theme_history — last ~10 snapshots per theme for undo. Pruned on write.
+ */
+export const themeHistory = pgTable('theme_history', {
+  id: text('id').primaryKey().$defaultFn(() => createId()),
+  themeName: text('theme_name').notNull(),
+  dials: jsonb('dials').$type<Record<string, unknown>>().notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
 export type Item = typeof items.$inferSelect;
 export type NewItem = typeof items.$inferInsert;
 export type ComparableSale = typeof comparableSales.$inferSelect;
 export type ChatImage = typeof chatImages.$inferSelect;
 export type NewChatImage = typeof chatImages.$inferInsert;
+export type ThemeSettings = typeof themeSettings.$inferSelect;
+export type NewThemeSettings = typeof themeSettings.$inferInsert;
+export type ThemeHistoryRow = typeof themeHistory.$inferSelect;
