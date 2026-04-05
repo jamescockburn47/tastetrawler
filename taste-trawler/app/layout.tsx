@@ -19,8 +19,25 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const themes = await readAllThemes();
-  const cssOverrides = allThemeCssBlocks(themes);
+  // DIAGNOSTIC: log env presence + catch any theme-read failure so we can
+  // see WHY the preview deploy is 500ing. Remove once root cause confirmed.
+  console.log('[layout] env presence:', {
+    DATABASE_URL: !!process.env.DATABASE_URL,
+    CLERK_SECRET_KEY: !!process.env.CLERK_SECRET_KEY,
+    NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: !!process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY,
+    BLOB_READ_WRITE_TOKEN: !!process.env.BLOB_READ_WRITE_TOKEN,
+    AI_GATEWAY_API_KEY: !!process.env.AI_GATEWAY_API_KEY,
+    VERCEL_ENV: process.env.VERCEL_ENV,
+  });
+  let cssOverrides = '';
+  try {
+    const themes = await readAllThemes();
+    cssOverrides = allThemeCssBlocks(themes);
+  } catch (err) {
+    console.error('[layout] readAllThemes threw:', err);
+    // Continue rendering with empty overrides — theme scopes in globals.css
+    // still apply their base palettes.
+  }
 
   return (
     <ClerkProvider appearance={{ baseTheme: dark }}>
