@@ -1,5 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { EmptyState } from '@/components/empty-state';
 import type { Item } from '@/lib/db/schema';
 
 function daysSince(date: Date | string): number {
@@ -7,7 +8,15 @@ function daysSince(date: Date | string): number {
 }
 
 export function StaleItemsPanel({ items }: { items: Item[] }) {
-  if (items.length === 0) return null;
+  if (items.length === 0) {
+    return (
+      <EmptyState
+        title="Nothing stale — she's shifting it."
+        description="Items that sit listed for 14+ days without a sale will show up here. Clean slate for now."
+        illustration={<span aria-hidden>✨</span>}
+      />
+    );
+  }
 
   return (
     <Card>

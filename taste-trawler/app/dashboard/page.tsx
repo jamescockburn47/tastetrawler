@@ -1,5 +1,6 @@
 import { KpiCards } from '@/components/kpi-cards';
 import { StaleItemsPanel } from '@/components/stale-items-panel';
+import { PageContainer, PageHeader } from '@/components/page-container';
 import { db } from '@/lib/db';
 import { items } from '@/lib/db/schema';
 import { eq, and, sql, desc } from 'drizzle-orm';
@@ -46,10 +47,15 @@ async function getStaleItems() {
 export default async function DashboardPage() {
   const [stats, staleItems] = await Promise.all([getStats(), getStaleItems()]);
   return (
-    <div className="space-y-6">
-      <h1 className="text-lg font-semibold">Dashboard</h1>
-      <KpiCards stats={stats} />
-      <StaleItemsPanel items={staleItems} />
-    </div>
+    <PageContainer>
+      <PageHeader
+        title="Dashboard"
+        description="Stock, sales, and the stale-items panel — the numbers MG runs the shop on."
+      />
+      <div className="space-y-6">
+        <KpiCards stats={stats} />
+        <StaleItemsPanel items={staleItems} />
+      </div>
+    </PageContainer>
   );
 }
