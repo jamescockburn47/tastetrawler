@@ -91,4 +91,23 @@ export const toolDefinitions = [
       'Only the Vinted sync step — check what has sold since last time and update view/like counts. Use when the user asks "what sold", "check Vinted", "any sales", or similar.',
     input_schema: { type: 'object', properties: {} },
   },
+  {
+    name: 'tt_recall_images',
+    description:
+      'Search the archive of every photo MG or James has sent in WhatsApp — each image is stored with its VLM description, caption, speaker, timestamp, and any later discussion. Use when someone refers back to a past photo ("that bowl from yesterday", "the jumper you saw last week", "what did I show you about the green dress"). Returns a short list of matching images with id, blob URL, description, and when it was sent.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        query: {
+          type: 'string',
+          description: 'Free text, matched against VLM description, caption, and discussion. Optional — omit to list recent images.',
+        },
+        since: {
+          type: 'string',
+          description: 'ISO date or ms epoch lower bound. Optional.',
+        },
+        limit: { type: 'number', description: 'Max rows (default 10, cap 50)' },
+      },
+    },
+  },
 ];

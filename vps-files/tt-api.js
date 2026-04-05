@@ -55,3 +55,42 @@ export async function enrichBatch(limit = 20) {
 export async function getTasteProfile() {
   return ttFetch('/api/taste-profile');
 }
+
+// ─── Chat-image capture / recall ────────────────────────────────────────────
+// The bot captures every photo it sees (trigger or no trigger) and hands the
+// bytes off to the web app, which stores them in Vercel Blob and indexes a row
+// in `chat_images`. The row later backs both the website gallery and the
+// `tt_recall_images` tool.
+
+/**
+ * Create a chat-image row. `imageBase64` is raw base64 (no data: prefix).
+ * Returns the created row, including `id` and `blobUrl`.
+ */
+export async function createChatImage(payload) {
+  return ttFetch('/api/chat-images', { method: 'POST', body: JSON.stringify(payload) });
+}
+
+/**
+ * Append to the discussion field on an existing chat image. Called each time
+ * the bot answers a question that touches a stored photo, so MG ends up with
+ * a per-image log of what was said.
+ */
+export async function appendChatImageDiscussion(id, append, extras = {}) {
+  return ttFetch(`/api/chat-images/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify({ append, ...extras }),
+  });
+}
+
+/**
+ * Search the chat-images index. Supports free text (q), since (ms epoch or ISO),
+ * jid scope, and limit. Returns an array of rows ordered by most recent first.
+ */
+export async function searchChatImages({ q, since, jid, limit = 20 } = {}) {
+  const qs = new URLSearchParams();
+  if (q) qs.set('q', q);
+  if (since) qs.set('since', String(since));
+  if (jid) qs.set('jid', jid);
+  qs.set('limit', String(limit));
+  return ttFetch(`/api/chat-images?${qs.toString()}`);
+}

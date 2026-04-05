@@ -95,8 +95,31 @@ async function buildSystemPrompt() {
 
 // ─── Chat loop ──────────────────────────────────────────────────────────────
 
+/**
+ * Merge adjacent same-role messages. The Anthropic (and MiniMax-compat) API
+ * requires strictly alternating user/assistant turns, but our DB now logs
+ * every group-chat line as role='user' regardless of who sent it — including
+ * untriggered chatter between MG and James. Collapse runs of the same role
+ * into a single message with newline-joined content so the API accepts it.
+ *
+ * Tool-result turns (content = array of blocks) are left intact; they only
+ * appear inside the tool loop below, not in DB history.
+ */
+function collapseRoles(msgs) {
+  const out = [];
+  for (const m of msgs) {
+    const prev = out[out.length - 1];
+    if (prev && prev.role === m.role && typeof prev.content === 'string' && typeof m.content === 'string') {
+      prev.content = `${prev.content}\n${m.content}`;
+    } else {
+      out.push({ role: m.role, content: m.content });
+    }
+  }
+  return out;
+}
+
 export async function chat(messages, imageUrls = []) {
-  const anthropicMessages = messages.map((m) => ({ role: m.role, content: m.content }));
+  const anthropicMessages = collapseRoles(messages);
 
   // Legacy path: if images come through as URLs (not pre-analysed VLM text),
   // attach them to the last user message. With MiniMax M2.7 this path is

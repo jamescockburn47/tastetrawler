@@ -133,6 +133,15 @@ Only the Gemini vision enrichment step — analyse photos to add colours, style 
 
 Only the Vinted sync step — check what has sold since last time and update view/like counts. Use when the user asks "what sold", "check Vinted", "any sales", or similar.
 
+### `tt_recall_images`
+
+Search the archive of every photo MG or James has sent in WhatsApp — each image is stored with its VLM description, caption, speaker, timestamp, and any later discussion. Use when someone refers back to a past photo ("that bowl from yesterday", "the jumper you saw last week", "what did I show you about the green dress"). Returns a short list of matching images with id, blob URL, description, and when it was sent.
+
+**Inputs:**
+- `query` (string) — Free text, matched against VLM description, caption, and discussion. Optional — omit to list recent images.
+- `since` (string) — ISO date or ms epoch lower bound. Optional.
+- `limit` (number) — Max rows (default 10, cap 50)
+
 <!-- TOOLS:END -->
 
 ## Known gaps / do-not-touch

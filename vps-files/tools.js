@@ -1,4 +1,4 @@
-import { analysePhotos, searchComps, generateListing, createItem, getStats, getItems, patchItem } from './tt-api.js';
+import { analysePhotos, searchComps, generateListing, createItem, getStats, getItems, patchItem, searchChatImages } from './tt-api.js';
 import { formatEvaluation, formatQuickList, formatStats, formatStaleItems } from './formatter.js';
 import { tidyInventory, backfillFromVinted, enrichWithGemini, syncWithVinted } from './admin-tools.js';
 import { logTool } from './db.js';
@@ -136,6 +136,21 @@ async function dispatchTool(name, input) {
       return parts.length
         ? `Vinted sync: ${parts.join(', ')}.`
         : 'Vinted sync: nothing new.';
+    }
+
+    case 'tt_recall_images': {
+      const limit = Math.min(input.limit ?? 10, 50);
+      const rows = await searchChatImages({ q: input.query, since: input.since, limit });
+      if (!rows.length) return 'No matching images in the archive.';
+      return rows
+        .map((r) => {
+          const when = r.observedAt ? new Date(r.observedAt).toISOString().slice(0, 16).replace('T', ' ') : '?';
+          const who = r.speakerName || 'unknown';
+          const desc = (r.vlmDescription || '').replace(/\s+/g, ' ').slice(0, 240);
+          const disc = r.discussion ? `\n    discussion: ${r.discussion.replace(/\s+/g, ' ').slice(0, 200)}` : '';
+          return `• id=${r.id} ${when} [${who}] ${r.blobUrl}\n    ${desc}${disc}`;
+        })
+        .join('\n');
     }
 
     default:
