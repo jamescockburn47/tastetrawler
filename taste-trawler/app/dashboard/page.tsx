@@ -5,36 +5,54 @@ import { db } from '@/lib/db';
 import { items } from '@/lib/db/schema';
 import { eq, and, sql, desc } from 'drizzle-orm';
 
+export const dynamic = 'force-dynamic';
+
 async function getStats() {
   const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
 
-  const sold = await db
-    .select({
+  const [sold30, soldAllTime, active, stale] = await Promise.all([
+    // 30-day sold window
+    db.select({
       count: sql<number>`count(*)`,
       revenue: sql<number>`coalesce(sum(sold_price), 0)`,
       cost: sql<number>`coalesce(sum(buy_price), 0)`,
+      withCost: sql<number>`count(*) filter (where buy_price is not null)`,
       avgDaysToSell: sql<number>`coalesce(avg(extract(epoch from (sold_at - listed_at)) / 86400), 0)`,
-    })
-    .from(items)
-    .where(and(eq(items.status, 'sold'), sql`sold_at >= ${since}`));
+    }).from(items).where(and(eq(items.status, 'sold'), sql`sold_at >= ${since}`)),
 
-  const active = await db.select({ count: sql<number>`count(*)` }).from(items).where(eq(items.status, 'listed'));
-  const stale = await db.select({ count: sql<number>`count(*)` }).from(items).where(and(eq(items.status, 'listed'), sql`listed_at < now() - interval '14 days'`));
+    // All-time sold
+    db.select({
+      count: sql<number>`count(*)`,
+      revenue: sql<number>`coalesce(sum(sold_price), 0)`,
+      cost: sql<number>`coalesce(sum(buy_price), 0)`,
+      withCost: sql<number>`count(*) filter (where buy_price is not null)`,
+    }).from(items).where(eq(items.status, 'sold')),
 
-  const bestFlip = await db
-    .select({ title: items.title, margin: sql<number>`sold_price - buy_price`, marginPct: sql<number>`case when buy_price > 0 then round((sold_price - buy_price)::numeric / buy_price * 100) else 0 end` })
-    .from(items)
-    .where(and(eq(items.status, 'sold'), sql`sold_at >= ${since}`))
-    .orderBy(sql`sold_price - buy_price desc`)
-    .limit(1);
+    db.select({ count: sql<number>`count(*)` }).from(items).where(eq(items.status, 'listed')),
 
-  const s = sold[0];
+    db.select({ count: sql<number>`count(*)` }).from(items).where(
+      and(eq(items.status, 'listed'), sql`listed_at < now() - interval '14 days'`)
+    ),
+  ]);
+
+  const s30 = sold30[0];
+  const sAll = soldAllTime[0];
+
   return {
-    revenue: s.revenue, profit: s.revenue - s.cost,
-    margin: s.revenue > 0 ? Math.round(((s.revenue - s.cost) / s.revenue) * 100) : 0,
-    itemsSold: s.count, avgDaysToSell: Math.round(s.avgDaysToSell * 10) / 10,
-    activeListings: active[0].count, staleListings: stale[0].count,
-    bestFlip: bestFlip[0] ?? null,
+    // 30-day
+    revenue30: s30.revenue,
+    profit30: s30.revenue - s30.cost,
+    profitKnown30: s30.withCost,
+    itemsSold30: s30.count,
+    avgDaysToSell: Math.round(s30.avgDaysToSell * 10) / 10,
+    // All-time
+    revenueAll: sAll.revenue,
+    profitAll: sAll.revenue - sAll.cost,
+    profitKnownAll: sAll.withCost,
+    itemsSoldAll: sAll.count,
+    // Stock
+    activeListings: active[0].count,
+    staleListings: stale[0].count,
   };
 }
 
@@ -50,7 +68,7 @@ export default async function DashboardPage() {
     <PageContainer>
       <PageHeader
         title="Dashboard"
-        description="Stock, sales, and the stale-items panel — the numbers MG runs the shop on."
+        description="Stock, sales, and the stale-items panel."
       />
       <div className="space-y-6">
         <KpiCards stats={stats} />
