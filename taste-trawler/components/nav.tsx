@@ -9,6 +9,7 @@ import { ThemeToggle } from './theme-toggle';
 const links = [
   { href: '/dashboard', label: 'Dashboard' },
   { href: '/inventory', label: 'Inventory' },
+  { href: '/gallery', label: 'Gallery' },
   { href: '/workbench', label: 'Workbench' },
 ];
 

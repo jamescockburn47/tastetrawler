@@ -36,6 +36,7 @@ export function ItemTable({ items }: { items: Item[] }) {
         <TableRow>
           <TableHead className="w-12"></TableHead>
           <TableHead>Title</TableHead>
+          <TableHead>Details</TableHead>
           <TableHead>Status</TableHead>
           <TableHead className="text-right font-mono">Buy</TableHead>
           <TableHead className="text-right font-mono">List</TableHead>
@@ -58,6 +59,17 @@ export function ItemTable({ items }: { items: Item[] }) {
               )}
             </TableCell>
             <TableCell className="max-w-[200px] truncate text-sm">{item.title || 'Untitled'}</TableCell>
+            <TableCell>
+              <div className="flex flex-wrap gap-1">
+                {item.brand && <Badge variant="outline" className="text-[10px]">{item.brand}</Badge>}
+                {item.category && <Badge variant="secondary" className="text-[10px]">{item.category}</Badge>}
+                {item.condition && <Badge variant="secondary" className="text-[10px]">{item.condition}</Badge>}
+                {item.era && <Badge variant="secondary" className="text-[10px]">{item.era}</Badge>}
+                {item.colours?.map((c) => (
+                  <Badge key={c} variant="outline" className="text-[10px]">{c}</Badge>
+                ))}
+              </div>
+            </TableCell>
             <TableCell><Badge variant={statusColour[item.status] as any} className="text-[10px]">{item.status}</Badge></TableCell>
             <TableCell className="text-right font-mono text-sm [font-feature-settings:'tnum']">{formatPence(item.buyPrice)}</TableCell>
             <TableCell className="text-right font-mono text-sm [font-feature-settings:'tnum']">{formatPence(item.listPrice)}</TableCell>
