@@ -21,6 +21,10 @@ export async function PATCH(
   const { id } = await params;
   const body = await request.json();
 
+  // Coerce ISO timestamp strings to Date objects (Drizzle requires Date for timestamp columns)
+  if (body.soldAt && typeof body.soldAt === 'string') body.soldAt = new Date(body.soldAt);
+  if (body.listedAt && typeof body.listedAt === 'string') body.listedAt = new Date(body.listedAt);
+
   const [updated] = await db
     .update(items)
     .set({ ...body, updatedAt: new Date() })
