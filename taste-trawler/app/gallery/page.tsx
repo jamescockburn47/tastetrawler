@@ -4,6 +4,8 @@ import { desc } from 'drizzle-orm';
 import { PageContainer, PageHeader } from '@/components/page-container';
 import { GalleryGrid } from '@/components/gallery-grid';
 
+export const dynamic = 'force-dynamic';
+
 export default async function GalleryPage() {
   const images = await db
     .select()
