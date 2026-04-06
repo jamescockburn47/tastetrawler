@@ -11,6 +11,7 @@ const links = [
   { href: '/inventory', label: 'Inventory' },
   { href: '/gallery', label: 'Gallery' },
   { href: '/workbench', label: 'Workbench' },
+  { href: '/how-to', label: 'How To' },
 ];
 
 export function Nav() {
