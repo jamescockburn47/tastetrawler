@@ -77,6 +77,9 @@ export const chatImages = pgTable('chat_images', {
   observedAt: timestamp('observed_at').defaultNow().notNull(),
   respondedAt: timestamp('responded_at'),
   discussion: text('discussion').notNull().default(''),
+  // Structured analysis from MiniMax VLM — brand, category, condition, etc.
+  // Stored on capture so tt_evaluate_item can read it without calling Gemini.
+  vlmAnalysis: jsonb('vlm_analysis').$type<Record<string, unknown>>(),
   // Free-form labels lifted from the VLM description for cheap keyword recall
   tags: jsonb('tags').$type<string[]>().default([]),
   createdAt: timestamp('created_at').defaultNow().notNull(),

@@ -1,0 +1,1 @@
+ALTER TABLE "chat_images" ADD COLUMN "vlm_analysis" jsonb;

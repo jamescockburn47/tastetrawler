@@ -63,6 +63,7 @@ export async function POST(request: NextRequest) {
       speakerId,
       isGroup = false,
       tags = [],
+      vlmAnalysis,
       respondedAt,
     } = body ?? {};
 
@@ -91,6 +92,7 @@ export async function POST(request: NextRequest) {
         speakerName: speakerName ?? null,
         speakerId: speakerId ?? null,
         isGroup: isGroup ? 'true' : 'false',
+        vlmAnalysis: vlmAnalysis ?? null,
         tags,
         respondedAt: respondedAt ? new Date(respondedAt) : null,
       })
