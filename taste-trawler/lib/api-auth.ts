@@ -15,7 +15,8 @@ export function isApiKeyAuthenticated(request: NextRequest): boolean {
   const candidates = [
     process.env.TASTE_TRAWLER_API_KEY,
     process.env.TT_API_KEY,
-  ].filter((v): v is string => typeof v === 'string' && v.length > 0);
+  ].filter((v): v is string => typeof v === 'string' && v.length > 0)
+   .map((v) => v.trim());
 
   return candidates.some((k) => k === presented);
 }
