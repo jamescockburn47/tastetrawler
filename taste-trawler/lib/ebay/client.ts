@@ -1,6 +1,29 @@
 import type { EbaySearchResponse, CompResult } from './types';
 
 /**
+ * Build a comp search query from item analysis fields.
+ * Produces e.g. "Mulberry leather crossbody bag medium vintage good"
+ * instead of just "Mulberry Bags vintage".
+ */
+export function buildCompQuery(analysis: {
+  brand?: string | null;
+  category?: string | null;
+  era?: string | null;
+  material?: string | null;
+  size?: string | null;
+  condition?: string | null;
+}): string {
+  return [
+    analysis.brand,
+    analysis.material,
+    analysis.category,
+    analysis.size,
+    analysis.era,
+    analysis.condition,
+  ].filter(Boolean).join(' ');
+}
+
+/**
  * eBay Browse API client.
  *
  * HARD RULE: every failure must surface. The bot's tt_search_comps was
@@ -93,7 +116,6 @@ export async function searchEbay(query: string, limit = 10): Promise<CompResult[
     q: query,
     limit: String(limit),
     filter: 'deliveryCountry:GB',
-    sort: 'price',
   });
 
   const res = await fetch(
@@ -144,6 +166,7 @@ export async function searchEbay(query: string, limit = 10): Promise<CompResult[
     imageUrl: item.image.imageUrl,
     condition: item.condition,
     seller: item.seller.username,
+    isSold: false,
   }));
 }
 

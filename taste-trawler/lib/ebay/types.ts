@@ -15,11 +15,12 @@ export interface EbaySearchResponse {
 }
 
 export interface CompResult {
-  platform: 'ebay';
+  platform: 'ebay' | 'vinted';
   title: string;
   price: number;       // pence
   url: string;
   imageUrl: string;
   condition: string;
   seller: string;
+  isSold: boolean;
 }

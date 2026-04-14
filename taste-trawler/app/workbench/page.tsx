@@ -25,8 +25,8 @@ export default function WorkbenchPage() {
     const analysisData = await analysisRes.json();
     setAnalysis(analysisData);
 
-    const searchQuery = [analysisData.brand, analysisData.category, analysisData.era].filter(Boolean).join(' ');
-    const compsRes = await fetch('/api/comps', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ query: searchQuery }) });
+    const searchQuery = [analysisData.brand, analysisData.material, analysisData.category, analysisData.size, analysisData.era, analysisData.condition].filter(Boolean).join(' ');
+    const compsRes = await fetch('/api/comps', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ query: searchQuery, sources: ['ebay', 'vinted'] }) });
     const compsData = await compsRes.json();
     setComps(compsData.results);
 
@@ -81,7 +81,7 @@ export default function WorkbenchPage() {
           <div className="grid gap-6 lg:grid-cols-2">
             <div className="space-y-4">
               <PhotoUpload onUpload={setPhotos} existingPhotos={photos} />
-              <PricingPanel comps={comps} suggestedPrice={listing.suggestedPrice} priceReasoning={listing.priceReasoning} buyPrice={null} />
+              <PricingPanel comps={comps} suggestedPrice={listing.suggestedPrice} priceLow={listing.priceLow ?? null} priceHigh={listing.priceHigh ?? null} priceConfidence={listing.priceConfidence ?? null} priceReasoning={listing.priceReasoning} buyPrice={null} />
             </div>
             <ListingEditor title={listing.title} description={listing.description} brand={analysis.brand} category={listing.category} condition={analysis.condition} suggestedPrice={listing.suggestedPrice} onSave={handleSave} onCopyToClipboard={handleCopyToClipboard} saving={saving} />
           </div>

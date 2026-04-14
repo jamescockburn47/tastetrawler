@@ -49,8 +49,10 @@ export const comparableSales = pgTable('comparable_sales', {
   platform: text('platform').notNull(),
   itemTitle: text('item_title').notNull(),
   soldPrice: integer('sold_price'),     // pence
+  isSold: text('is_sold'),              // 'true' | 'false' — whether this was an actual sale
   soldAt: timestamp('sold_at'),
   url: text('url'),
+  searchQuery: text('search_query'),    // query that produced this comp (for cache lookup)
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
 
