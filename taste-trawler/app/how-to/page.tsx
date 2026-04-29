@@ -47,7 +47,7 @@ export default function HowToPage() {
 
         <Section title="Listing an item">
           <p className="text-sm text-muted-foreground">
-            Send a photo and say "list this" (or "save this", "add this"). The bot generates a title and description and saves it as a draft. You can then copy the description into Vinted.
+            Send a photo and say &quot;list this&quot; (or &quot;save this&quot;, &quot;add this&quot;). The bot generates a title and description and saves it as a draft. You can then copy the description into Vinted.
           </p>
           <Command text="tt list this" desc="Save the last photo as a draft listing" />
           <Command text="tt list this, paid £4" desc="Same, but records the buy price too" />

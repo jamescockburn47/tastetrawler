@@ -9,10 +9,12 @@
 
 import pino from 'pino';
 import { tidyInventory } from './admin-tools.js';
-import { getStats, getItems } from './tt-api.js';
+import { getStats, getItems, getSales } from './tt-api.js';
 import { auditSince, recordJobRun, getJobState } from './db.js';
+import { buildMorningBriefingText } from './briefing-format.js';
 
 const log = pino({ name: 'jobs' });
+const DAY_MS = 24 * 60 * 60 * 1000;
 
 // ─── Nightly tidy (23:30) ───────────────────────────────────────────────────
 // Runs the full tidy chain end-to-end. Results go to the jobs table. On
@@ -38,50 +40,61 @@ export async function runNightlyTidy() {
 // Dedupe is enforced by scheduler.js via facts table (one per calendar day).
 
 export async function buildMorningBriefing() {
-  const dayMs = 24 * 60 * 60 * 1000;
-  const since = Date.now() - dayMs;
+  const now = Date.now();
+  const since = now - DAY_MS;
 
-  const [stats, listed, audit] = await Promise.all([
+  const [stats, listed, allItems, confirmedSales, pendingSales, draftSales, audit] = await Promise.all([
     getStats(1).catch((e) => ({ error: e.message })),
     getItems('listed').catch(() => []),
+    getItems().catch(() => []),
+    getSales('confirmed').catch(() => []),
+    getSales('needs_review').catch(() => []),
+    getSales('draft').catch(() => []),
     Promise.resolve(auditSince(since)),
   ]);
 
   const stale = listed.filter((i) => {
     if (!i.listedAt) return false;
-    return (Date.now() - new Date(i.listedAt).getTime()) / dayMs >= 14;
+    return (now - new Date(i.listedAt).getTime()) / DAY_MS >= 14;
   });
 
   const errors = audit.filter((a) => a.error);
-
-  const lines = ['*Morning briefing.*'];
-  if (stats && !stats.error) {
-    const parts = [];
-    if (typeof stats.sold === 'number') parts.push(`${stats.sold} sold`);
-    if (typeof stats.revenue === 'number')
-      parts.push(`£${(stats.revenue / 100).toFixed(2)} revenue`);
-    if (typeof stats.profit === 'number')
-      parts.push(`£${(stats.profit / 100).toFixed(2)} profit`);
-    lines.push(`Last 24h: ${parts.length ? parts.join(', ') : 'nothing logged'}.`);
-  } else if (stats?.error) {
-    lines.push(`Last 24h: stats unavailable (${stats.error}).`);
-  }
-
-  lines.push(
-    `${listed.length} live listings${stale.length ? `, ${stale.length} stale (14d+)` : ''}.`,
+  const recentSales = enrichRecentSales(confirmedSales, allItems, since);
+  const missingBuyPrice = allItems.filter(
+    (item) => item.status === 'sold' && item.soldPrice != null && item.buyPrice == null,
   );
+  const reviewSales = [...pendingSales, ...draftSales];
 
-  // Last nightly tidy result, if we ran it
-  const tidyState = getLastJobState('nightly_tidy');
-  if (tidyState) lines.push(tidyState);
+  const text = buildMorningBriefingText({
+    stats,
+    recentSales,
+    staleItems: stale,
+    pendingSales: reviewSales,
+    missingBuyPrice,
+    auditErrors: errors,
+    tidyLine: getLastJobState('nightly_tidy'),
+  });
 
-  if (errors.length) {
-    lines.push(`${errors.length} tool errors overnight — check audit log.`);
-  }
-
-  const text = lines.join('\n');
   recordJobRun('morning_briefing', { at: Date.now(), chars: text.length });
   return text;
+}
+
+function enrichRecentSales(sales, items, sinceTs) {
+  const itemById = new Map(items.map((item) => [item.id, item]));
+  return sales
+    .filter((sale) => sale.soldAt && new Date(sale.soldAt).getTime() >= sinceTs)
+    .sort((a, b) => new Date(b.soldAt).getTime() - new Date(a.soldAt).getTime())
+    .map((sale) => {
+      const item = sale.itemId ? itemById.get(sale.itemId) : null;
+      const buyPrice = sale.buyPriceAtSale ?? item?.buyPrice ?? null;
+      const netProceeds = sale.netProceeds ?? sale.salePrice ?? null;
+      return {
+        ...sale,
+        title: item?.title || sale.notes || 'Unmatched sale',
+        buyPriceAtSale: buyPrice,
+        profit: netProceeds != null && buyPrice != null ? netProceeds - buyPrice : null,
+      };
+    });
 }
 
 function getLastJobState(name) {
@@ -90,11 +103,11 @@ function getLastJobState(name) {
   const ago = Math.round((Date.now() - row.last_run_at) / (60 * 1000));
   if (row.last_error) return `Last nightly tidy failed (${ago}m ago): ${row.last_error}`;
   try {
-    const r = JSON.parse(row.last_result || '{}');
+    const result = JSON.parse(row.last_result || '{}');
     const bits = [];
-    if (r.backfill?.updated) bits.push(`${r.backfill.updated} backfilled`);
-    if (r.enrich?.enriched) bits.push(`${r.enrich.enriched} enriched`);
-    if (r.sync?.soldMarked) bits.push(`${r.sync.soldMarked} marked sold`);
+    if (result.backfill?.updated) bits.push(`${result.backfill.updated} backfilled`);
+    if (result.enrich?.enriched) bits.push(`${result.enrich.enriched} enriched`);
+    if (result.sync?.soldMarked) bits.push(`${result.sync.soldMarked} marked sold`);
     if (!bits.length) return null;
     return `Overnight tidy: ${bits.join(', ')}.`;
   } catch {

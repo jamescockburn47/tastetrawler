@@ -9,6 +9,18 @@ export const itemSourceEnum = pgEnum('item_source', [
   'charity_shop', 'vinted_flip', 'ebay', 'sale', 'other',
 ]);
 
+export const saleStatusEnum = pgEnum('sale_status', [
+  'draft', 'needs_review', 'confirmed', 'void',
+]);
+
+export const salePlatformEnum = pgEnum('sale_platform', [
+  'vinted', 'ebay', 'depop', 'in_person', 'other',
+]);
+
+export const saleEventTypeEnum = pgEnum('sale_event_type', [
+  'created', 'updated', 'confirmed', 'voided', 'linked_item', 'linked_image',
+]);
+
 export const items = pgTable('items', {
   id: text('id').primaryKey().$defaultFn(() => createId()),
   photos: jsonb('photos').$type<string[]>().notNull().default([]),
@@ -87,6 +99,42 @@ export const chatImages = pgTable('chat_images', {
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
 
+export const sales = pgTable('sales', {
+  id: text('id').primaryKey().$defaultFn(() => createId()),
+  itemId: text('item_id').references(() => items.id),
+  chatImageIds: jsonb('chat_image_ids').$type<string[]>().notNull().default([]),
+
+  salePrice: integer('sale_price'),          // pence
+  buyPriceAtSale: integer('buy_price_at_sale'),
+  fees: integer('fees').notNull().default(0),
+  postage: integer('postage').notNull().default(0),
+  discount: integer('discount').notNull().default(0),
+  netProceeds: integer('net_proceeds'),
+
+  platform: salePlatformEnum('platform').notNull().default('vinted'),
+  soldAt: timestamp('sold_at'),
+  notes: text('notes'),
+
+  sourceJid: text('source_jid'),
+  sourceMessage: text('source_message'),
+  confidence: real('confidence').notNull().default(0),
+  status: saleStatusEnum('status').notNull().default('draft'),
+
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+  confirmedAt: timestamp('confirmed_at'),
+});
+
+export const saleEvents = pgTable('sale_events', {
+  id: text('id').primaryKey().$defaultFn(() => createId()),
+  saleId: text('sale_id').notNull().references(() => sales.id),
+  type: saleEventTypeEnum('type').notNull(),
+  actor: text('actor').notNull().default('bot'),
+  message: text('message').notNull().default(''),
+  payload: jsonb('payload').$type<Record<string, unknown>>().default({}),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
 /**
  * theme_settings — one row per theme ('malibu' | 'leopard'). `dials` is
  * the current JSONB blob validated against lib/theme-dials.ts schema.
@@ -115,6 +163,10 @@ export type NewItem = typeof items.$inferInsert;
 export type ComparableSale = typeof comparableSales.$inferSelect;
 export type ChatImage = typeof chatImages.$inferSelect;
 export type NewChatImage = typeof chatImages.$inferInsert;
+export type Sale = typeof sales.$inferSelect;
+export type NewSale = typeof sales.$inferInsert;
+export type SaleEvent = typeof saleEvents.$inferSelect;
+export type NewSaleEvent = typeof saleEvents.$inferInsert;
 export type ThemeSettings = typeof themeSettings.$inferSelect;
 export type NewThemeSettings = typeof themeSettings.$inferInsert;
 export type ThemeHistoryRow = typeof themeHistory.$inferSelect;

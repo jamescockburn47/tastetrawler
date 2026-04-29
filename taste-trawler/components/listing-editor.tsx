@@ -62,15 +62,15 @@ export function ListingEditor({ title: initialTitle, description: initialDescrip
                 buyPrice: buyPrice ? Math.round(parseFloat(buyPrice) * 100) : null,
                 status: 'draft',
               });
-              toast.success('Item added to inventory.');
-            } catch (err) {
-              toast.error('Failed to save item. Please try again.');
+              toast.success('Saved. The inventory goblin has been fed.');
+            } catch {
+              toast.error('Could not save it. Deeply annoying. Please try again.');
             }
           }}
           disabled={saving}
           className="flex-1"
         >
-          {saving ? 'Saving...' : 'Add to Inventory'}
+          {saving ? 'Saving...' : 'Add to inventory'}
         </Button>
         <Button variant="outline" onClick={onCopyToClipboard}>Copy for Vinted</Button>
       </div>

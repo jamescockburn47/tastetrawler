@@ -1,0 +1,39 @@
+[
+  {
+    "name": "photo-first-sale",
+    "messages": [
+      "sent a photo id=img_green_bag",
+      "sold this for £28 today"
+    ],
+    "expectedMissing": ["which item sold", "buy price"]
+  },
+  {
+    "name": "complete-freeform-sale",
+    "messages": [
+      "Sold the vintage Coach bag on Vinted for £42. Bought for £8, sold today."
+    ],
+    "expectedMissing": []
+  },
+  {
+    "name": "multiple-items-one-chat",
+    "messages": [
+      "The green bag sold for £28 and the red scarf sold for £12"
+    ],
+    "expectedMissing": ["buy price"]
+  },
+  {
+    "name": "uncertain-item-match",
+    "messages": [
+      "that black dress sold"
+    ],
+    "expectedMissing": ["which item sold", "sale price", "sold date", "buy price"]
+  },
+  {
+    "name": "corrected-sale-price",
+    "messages": [
+      "sold the ceramic bowl for £18",
+      "actually £16, forgot the discount"
+    ],
+    "expectedPatch": { "salePrice": 1600 }
+  }
+]

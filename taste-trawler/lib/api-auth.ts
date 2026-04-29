@@ -1,4 +1,5 @@
 import { NextRequest } from 'next/server';
+import { auth } from '@clerk/nextjs/server';
 
 /**
  * Checks `Authorization: Bearer <key>` against any configured API key.
@@ -19,4 +20,10 @@ export function isApiKeyAuthenticated(request: NextRequest): boolean {
    .map((v) => v.trim());
 
   return candidates.some((k) => k === presented);
+}
+
+export async function isApiKeyOrClerkAuthenticated(request: NextRequest): Promise<boolean> {
+  if (isApiKeyAuthenticated(request)) return true;
+  const { userId } = await auth();
+  return Boolean(userId);
 }

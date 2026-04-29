@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { put } from '@vercel/blob';
-import { desc, ilike, or, gte, and, sql } from 'drizzle-orm';
+import { desc, ilike, or, gte, and, sql, type SQL } from 'drizzle-orm';
 import { db } from '@/lib/db';
 import { chatImages } from '@/lib/db/schema';
 import { isApiKeyAuthenticated } from '@/lib/api-auth';
@@ -116,16 +116,15 @@ export async function GET(request: NextRequest) {
     const jid = params.get('jid');
     const limit = Math.min(parseInt(params.get('limit') || '20', 10) || 20, 100);
 
-    const conditions = [] as any[];
+    const conditions: SQL[] = [];
     if (q) {
       const like = `%${q}%`;
-      conditions.push(
-        or(
-          ilike(chatImages.vlmDescription, like),
-          ilike(chatImages.caption, like),
-          ilike(chatImages.discussion, like),
-        ),
+      const searchCondition = or(
+        ilike(chatImages.vlmDescription, like),
+        ilike(chatImages.caption, like),
+        ilike(chatImages.discussion, like),
       );
+      if (searchCondition) conditions.push(searchCondition);
     }
     if (since) {
       const d = /^\d+$/.test(since) ? new Date(parseInt(since, 10)) : new Date(since);

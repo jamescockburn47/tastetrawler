@@ -70,7 +70,7 @@ export function KpiCards({ stats }: { stats: Stats }) {
           <KpiCard
             label="Profit"
             value={stats.profitKnown30 > 0 ? fmt(stats.profit30) : '—'}
-            sub={profitCaveat30 ?? (stats.itemsSold30 === 0 ? 'no sales yet' : 'all buy prices missing')}
+            sub={profitCaveat30 ?? (stats.itemsSold30 === 0 ? 'no sales yet' : 'buy prices missing, because apparently maths must suffer')}
             accent={stats.profit30 > 0 ? 'green' : undefined}
           />
           <KpiCard
@@ -80,7 +80,7 @@ export function KpiCards({ stats }: { stats: Stats }) {
           <KpiCard
             label="Active listings"
             value={String(stats.activeListings)}
-            sub={stats.staleListings > 0 ? `${stats.staleListings} stale (14d+)` : null}
+            sub={stats.staleListings > 0 ? `${stats.staleListings} stale and loitering` : 'nothing embarrassing yet'}
           />
         </div>
       </div>
@@ -96,7 +96,7 @@ export function KpiCards({ stats }: { stats: Stats }) {
           <KpiCard
             label="Total profit"
             value={stats.profitKnownAll > 0 ? fmt(stats.profitAll) : '—'}
-            sub={profitCaveatAll ?? (stats.itemsSoldAll === 0 ? 'no sales yet' : 'all buy prices missing')}
+            sub={profitCaveatAll ?? (stats.itemsSoldAll === 0 ? 'no sales yet' : 'buy prices missing, rude')}
             accent={stats.profitAll > 0 ? 'green' : undefined}
           />
           <KpiCard

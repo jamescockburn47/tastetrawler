@@ -15,7 +15,7 @@ function daysSince(date: Date | string | null): string {
   return `${Math.floor((Date.now() - new Date(date).getTime()) / (1000 * 60 * 60 * 24))}d`;
 }
 
-const statusColour: Record<string, string> = {
+const statusColour: Record<Item['status'], 'default' | 'secondary' | 'destructive' | 'outline'> = {
   draft: 'secondary', listed: 'default', sold: 'default', stale: 'destructive', archived: 'outline',
 };
 
@@ -70,7 +70,7 @@ export function ItemTable({ items }: { items: Item[] }) {
                 ))}
               </div>
             </TableCell>
-            <TableCell><Badge variant={statusColour[item.status] as any} className="text-[10px]">{item.status}</Badge></TableCell>
+            <TableCell><Badge variant={statusColour[item.status]} className="text-[10px]">{item.status}</Badge></TableCell>
             <TableCell className="text-right font-mono text-sm [font-feature-settings:'tnum']">{formatPence(item.buyPrice)}</TableCell>
             <TableCell className="text-right font-mono text-sm [font-feature-settings:'tnum']">{formatPence(item.listPrice)}</TableCell>
             <TableCell className="text-right font-mono text-sm [font-feature-settings:'tnum']">{formatPence(item.soldPrice)}</TableCell>

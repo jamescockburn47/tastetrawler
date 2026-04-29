@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { searchEbay, EbayClientError } from '@/lib/ebay/client';
 import { db } from '@/lib/db';
 import { comparableSales } from '@/lib/db/schema';
-import { eq, and, gt, like } from 'drizzle-orm';
+import { eq, and, gt } from 'drizzle-orm';
 import type { CompResult } from '@/lib/ebay/types';
 
 export async function POST(request: NextRequest) {

@@ -1,6 +1,7 @@
 import { generateText } from 'ai';
 import type { PhotoAnalysis } from './analyse-photos';
 import type { CompResult } from '../ebay/types';
+import { buildValuation, type ValuationResult } from '@/lib/valuation/engine';
 
 export interface GeneratedListing {
   title: string;
@@ -11,6 +12,7 @@ export interface GeneratedListing {
   priceConfidence: 'high' | 'medium' | 'low';
   priceReasoning: string;
   category: string;
+  valuation?: ValuationResult;
 }
 
 function buildCompSummary(comps: CompResult[]): string {
@@ -46,7 +48,8 @@ function buildCompSummary(comps: CompResult[]): string {
 
 export async function generateListing(
   analysis: PhotoAnalysis,
-  comps: CompResult[]
+  comps: CompResult[],
+  valuation = buildValuation(analysis, comps),
 ): Promise<GeneratedListing> {
   const compSummary = buildCompSummary(comps);
 
@@ -74,12 +77,23 @@ ${JSON.stringify(analysis, null, 2)}
 Comparable items from eBay and Vinted:
 ${compSummary}
 
+Structured valuation:
+${JSON.stringify({
+  targetPrice: valuation.targetPrice,
+  quickSalePrice: valuation.quickSalePrice,
+  patientPrice: valuation.patientPrice,
+  confidence: valuation.confidence,
+  risks: valuation.risks,
+  reasoning: valuation.reasoning,
+}, null, 2)}
+
 ${avgSoldPrice ? `Average SOLD price: £${(avgSoldPrice / 100).toFixed(2)}` : ''}
 ${avgPrice ? `Average asking price (all sources): £${(avgPrice / 100).toFixed(2)}` : ''}
 Total comps found: ${comps.length} (${soldComps.length} sold, ${comps.length - soldComps.length} active)
 
 PRICING INSTRUCTIONS:
 - Weight sold prices MORE heavily than active listing prices — sold prices reflect what buyers actually paid
+- Prefer the structured valuation target when it has medium or high confidence
 - Recommend the MARKET MIDPOINT — not above, not below. She wants fair prices with reasonable sell-through
 - If only active listings are available (no sold data), price at or slightly below asking prices
 - Do NOT undercut the market — price AT market value
@@ -105,5 +119,5 @@ Return ONLY valid JSON, no markdown wrapping.`,
     .replace(/\s*```$/, '')
     .trim();
 
-  return JSON.parse(cleaned) as GeneratedListing;
+  return { ...JSON.parse(cleaned), valuation } as GeneratedListing;
 }

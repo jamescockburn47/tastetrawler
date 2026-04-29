@@ -1,8 +1,9 @@
 import { KpiCards } from '@/components/kpi-cards';
 import { StaleItemsPanel } from '@/components/stale-items-panel';
 import { PageContainer, PageHeader } from '@/components/page-container';
+import { DailyBriefing } from '@/components/daily-briefing';
 import { db } from '@/lib/db';
-import { items } from '@/lib/db/schema';
+import { items, sales } from '@/lib/db/schema';
 import { eq, and, sql, desc } from 'drizzle-orm';
 
 export const dynamic = 'force-dynamic';
@@ -10,23 +11,26 @@ export const dynamic = 'force-dynamic';
 async function getStats() {
   const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
 
-  const [sold30, soldAllTime, active, stale] = await Promise.all([
+  const [sold30, soldAllTime, timing, active, stale] = await Promise.all([
     // 30-day sold window
     db.select({
       count: sql<number>`count(*)`,
-      revenue: sql<number>`coalesce(sum(sold_price), 0)`,
-      cost: sql<number>`coalesce(sum(buy_price), 0)`,
-      withCost: sql<number>`count(*) filter (where buy_price is not null)`,
-      avgDaysToSell: sql<number>`coalesce(avg(extract(epoch from (sold_at - listed_at)) / 86400), 0)`,
-    }).from(items).where(and(eq(items.status, 'sold'), sql`sold_at >= ${since}`)),
+      revenue: sql<number>`coalesce(sum(sale_price), 0)`,
+      cost: sql<number>`coalesce(sum(buy_price_at_sale), 0)`,
+      withCost: sql<number>`count(*) filter (where buy_price_at_sale is not null)`,
+    }).from(sales).where(and(eq(sales.status, 'confirmed'), sql`${sales.soldAt} >= ${since}`)),
 
     // All-time sold
     db.select({
       count: sql<number>`count(*)`,
-      revenue: sql<number>`coalesce(sum(sold_price), 0)`,
-      cost: sql<number>`coalesce(sum(buy_price), 0)`,
-      withCost: sql<number>`count(*) filter (where buy_price is not null)`,
-    }).from(items).where(eq(items.status, 'sold')),
+      revenue: sql<number>`coalesce(sum(sale_price), 0)`,
+      cost: sql<number>`coalesce(sum(buy_price_at_sale), 0)`,
+      withCost: sql<number>`count(*) filter (where buy_price_at_sale is not null)`,
+    }).from(sales).where(eq(sales.status, 'confirmed')),
+
+    db.select({
+      avgDaysToSell: sql<number>`coalesce(avg(extract(epoch from (sold_at - listed_at)) / 86400), 0)`,
+    }).from(items).where(and(eq(items.status, 'sold'), sql`sold_at >= ${since}`)),
 
     db.select({ count: sql<number>`count(*)` }).from(items).where(eq(items.status, 'listed')),
 
@@ -44,7 +48,7 @@ async function getStats() {
     profit30: s30.revenue - s30.cost,
     profitKnown30: s30.withCost,
     itemsSold30: s30.count,
-    avgDaysToSell: Math.round(s30.avgDaysToSell * 10) / 10,
+    avgDaysToSell: Math.round(timing[0].avgDaysToSell * 10) / 10,
     // All-time
     revenueAll: sAll.revenue,
     profitAll: sAll.revenue - sAll.cost,
@@ -68,9 +72,10 @@ export default async function DashboardPage() {
     <PageContainer>
       <PageHeader
         title="Dashboard"
-        description="Stock, sales, and the stale-items panel."
+        description="Sales, stock, and the items quietly embarrassing themselves."
       />
       <div className="space-y-6">
+        <DailyBriefing stats={stats} />
         <KpiCards stats={stats} />
         <StaleItemsPanel items={staleItems} />
       </div>

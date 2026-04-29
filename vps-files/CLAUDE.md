@@ -117,6 +117,49 @@ Record buy price for an existing inventory item.
 - `itemTitle` (string) *(required)* — Title or partial match
 - `buyPrice` (number) *(required)* — Price in pence
 
+### `tt_start_sale_log`
+
+Start a guided sale log for something MG sold. Use when she says an item sold or sends sales information. Create a draft first, then ask for the missing fields listed in the response.
+
+**Inputs:**
+- `itemTitle` (string) — Title or partial title to match an existing inventory item
+- `itemId` (string) — Exact Taste Trawler item id if known
+- `chatImageIds` (array) — Related chat image ids
+- `salePrice` (number) — Sale price in pence
+- `buyPriceAtSale` (number) — Buy price in pence, if known
+- `platform` (string) — `vinted`, `ebay`, `depop`, `in_person`, or `other`
+- `soldAt` (string) — ISO date or natural date already resolved by the model
+- `fees` (number) — Fees in pence
+- `postage` (number) — Postage paid by MG in pence
+- `discount` (number) — Discount in pence
+- `notes` (string) — Short source note from the WhatsApp message
+- `sourceJid` (string) — WhatsApp chat id if known
+- `sourceMessage` (string) — Original user wording
+
+### `tt_answer_sale_question`
+
+Add one or more answers to an existing guided sale draft. Use after `tt_start_sale_log` when MG answers the bot’s follow-up questions.
+
+**Inputs:**
+- `saleId` (string) *(required)* — Sale draft id
+- `itemTitle` (string) — Title or partial title if item still needs matching
+- `itemId` (string) — Exact item id if known
+- `salePrice` (number) — Sale price in pence
+- `buyPriceAtSale` (number) — Buy price in pence
+- `platform` (string) — `vinted`, `ebay`, `depop`, `in_person`, or `other`
+- `soldAt` (string) — ISO date or natural date already resolved by the model
+- `fees` (number) — Fees in pence
+- `postage` (number) — Postage paid by MG in pence
+- `discount` (number) — Discount in pence
+- `notes` (string)
+
+### `tt_confirm_sale_log`
+
+Confirm a guided sale draft after MG has approved the summary. This marks the sale confirmed and syncs the linked inventory item to sold.
+
+**Inputs:**
+- `saleId` (string) *(required)* — Sale draft id
+
 ### `tt_tidy_inventory`
 
 Tidy the whole inventory: backfill missing descriptions/categories/dates from Vinted, enrich items with AI vision (colours, style tags, era), and sync sales/views/likes from Vinted. Use when the user says "tidy", "sort out my stuff", "fix things", "update everything", "refresh", or any general request to clean up or update their inventory. This can take several minutes and no progress messages will be sent — just tell the user it is running and the bot will report when done.

@@ -68,6 +68,63 @@ export const toolDefinitions = [
     },
   },
   {
+    name: 'tt_start_sale_log',
+    description:
+      'Start a guided sale log for something MG sold. Use when she says an item sold or sends sales information. Create a draft first, then ask for the missing fields listed in the response.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        itemTitle: { type: 'string', description: 'Title or partial title to match an existing inventory item' },
+        itemId: { type: 'string', description: 'Exact Taste Trawler item id if known' },
+        chatImageIds: { type: 'array', items: { type: 'string' }, description: 'Related chat image ids' },
+        salePrice: { type: 'number', description: 'Sale price in pence' },
+        buyPriceAtSale: { type: 'number', description: 'Buy price in pence, if known' },
+        platform: { type: 'string', enum: ['vinted', 'ebay', 'depop', 'in_person', 'other'] },
+        soldAt: { type: 'string', description: 'ISO date or natural date already resolved by the model' },
+        fees: { type: 'number', description: 'Fees in pence' },
+        postage: { type: 'number', description: 'Postage paid by MG in pence' },
+        discount: { type: 'number', description: 'Discount in pence' },
+        notes: { type: 'string', description: 'Short source note from the WhatsApp message' },
+        sourceJid: { type: 'string', description: 'WhatsApp chat id if known' },
+        sourceMessage: { type: 'string', description: 'Original user wording' },
+      },
+    },
+  },
+  {
+    name: 'tt_answer_sale_question',
+    description:
+      'Add one or more answers to an existing guided sale draft. Use after tt_start_sale_log when MG answers the bot’s follow-up questions.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        saleId: { type: 'string', description: 'Sale draft id' },
+        itemTitle: { type: 'string', description: 'Title or partial title if item still needs matching' },
+        itemId: { type: 'string', description: 'Exact item id if known' },
+        salePrice: { type: 'number', description: 'Sale price in pence' },
+        buyPriceAtSale: { type: 'number', description: 'Buy price in pence' },
+        platform: { type: 'string', enum: ['vinted', 'ebay', 'depop', 'in_person', 'other'] },
+        soldAt: { type: 'string', description: 'ISO date or natural date already resolved by the model' },
+        fees: { type: 'number', description: 'Fees in pence' },
+        postage: { type: 'number', description: 'Postage paid by MG in pence' },
+        discount: { type: 'number', description: 'Discount in pence' },
+        notes: { type: 'string' },
+      },
+      required: ['saleId'],
+    },
+  },
+  {
+    name: 'tt_confirm_sale_log',
+    description:
+      'Confirm a guided sale draft after MG has approved the summary. This marks the sale confirmed and syncs the linked inventory item to sold.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        saleId: { type: 'string', description: 'Sale draft id' },
+      },
+      required: ['saleId'],
+    },
+  },
+  {
     name: 'tt_tidy_inventory',
     description:
       'Tidy the whole inventory: backfill missing descriptions/categories/dates from Vinted, enrich items with AI vision (colours, style tags, era), and sync sales/views/likes from Vinted. Use when the user says "tidy", "sort out my stuff", "fix things", "update everything", "refresh", or any general request to clean up or update their inventory. This can take several minutes and no progress messages will be sent — just tell the user it is running and the bot will report when done.',

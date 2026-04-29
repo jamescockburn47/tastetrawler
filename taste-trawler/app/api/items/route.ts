@@ -3,6 +3,8 @@ import { db } from '@/lib/db';
 import { items } from '@/lib/db/schema';
 import { desc, eq } from 'drizzle-orm';
 
+type ItemStatus = 'draft' | 'listed' | 'sold' | 'stale' | 'archived';
+
 const CORS = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
@@ -14,12 +16,12 @@ export async function OPTIONS() {
 }
 
 export async function GET(request: NextRequest) {
-  const status = request.nextUrl.searchParams.get('status');
+  const status = request.nextUrl.searchParams.get('status') as ItemStatus | null;
 
   const query = db.select().from(items).orderBy(desc(items.createdAt));
 
   const result = status
-    ? await query.where(eq(items.status, status as any))
+    ? await query.where(eq(items.status, status))
     : await query;
 
   return NextResponse.json(result, { headers: CORS });

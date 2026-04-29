@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { items } from '@/lib/db/schema';
+import { items, sales } from '@/lib/db/schema';
 import { eq, and, gte, sql } from 'drizzle-orm';
 
 export async function GET(request: NextRequest) {
@@ -10,8 +10,14 @@ export async function GET(request: NextRequest) {
   const sold = await db
     .select({
       count: sql<number>`count(*)`,
-      revenue: sql<number>`coalesce(sum(sold_price), 0)`,
-      cost: sql<number>`coalesce(sum(buy_price), 0)`,
+      revenue: sql<number>`coalesce(sum(sale_price), 0)`,
+      cost: sql<number>`coalesce(sum(buy_price_at_sale), 0)`,
+    })
+    .from(sales)
+    .where(and(eq(sales.status, 'confirmed'), gte(sales.soldAt, since)));
+
+  const soldItemTiming = await db
+    .select({
       avgDaysToSell: sql<number>`coalesce(avg(extract(epoch from (sold_at - listed_at)) / 86400), 0)`,
     })
     .from(items)
@@ -35,12 +41,13 @@ export async function GET(request: NextRequest) {
   const bestFlip = await db
     .select({
       title: items.title,
-      margin: sql<number>`sold_price - buy_price`,
-      marginPct: sql<number>`case when buy_price > 0 then round((sold_price - buy_price)::numeric / buy_price * 100) else 0 end`,
+      margin: sql<number>`${sales.netProceeds} - ${sales.buyPriceAtSale}`,
+      marginPct: sql<number>`case when ${sales.buyPriceAtSale} > 0 then round((${sales.netProceeds} - ${sales.buyPriceAtSale})::numeric / ${sales.buyPriceAtSale} * 100) else 0 end`,
     })
-    .from(items)
-    .where(and(eq(items.status, 'sold'), gte(items.soldAt, since)))
-    .orderBy(sql`sold_price - buy_price desc`)
+    .from(sales)
+    .leftJoin(items, eq(sales.itemId, items.id))
+    .where(and(eq(sales.status, 'confirmed'), gte(sales.soldAt, since)))
+    .orderBy(sql`${sales.netProceeds} - ${sales.buyPriceAtSale} desc`)
     .limit(1);
 
   const stats = sold[0];
@@ -50,7 +57,7 @@ export async function GET(request: NextRequest) {
     profit: stats.revenue - stats.cost,
     margin: stats.revenue > 0 ? Math.round(((stats.revenue - stats.cost) / stats.revenue) * 100) : 0,
     itemsSold: stats.count,
-    avgDaysToSell: Math.round(stats.avgDaysToSell * 10) / 10,
+    avgDaysToSell: Math.round(soldItemTiming[0].avgDaysToSell * 10) / 10,
     activeListings: active[0].count,
     staleListings: stale[0].count,
     bestFlip: bestFlip[0] ?? null,

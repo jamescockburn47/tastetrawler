@@ -25,6 +25,10 @@ export async function generateListing(analysis, comps) {
   return ttFetch('/api/generate-listing', { method: 'POST', body: JSON.stringify({ analysis, comps }) });
 }
 
+export async function buildValuation(analysis, comps, buyPrice = null) {
+  return ttFetch('/api/valuation', { method: 'POST', body: JSON.stringify({ analysis, comps, buyPrice }) });
+}
+
 export async function createItem(data) {
   return ttFetch('/api/items', { method: 'POST', body: JSON.stringify(data) });
 }
@@ -37,8 +41,24 @@ export async function getItems(status) {
   return ttFetch(`/api/items${status ? `?status=${status}` : ''}`);
 }
 
+export async function getSales(status) {
+  return ttFetch(`/api/sales${status ? `?status=${status}` : ''}`);
+}
+
 export async function patchItem(id, data) {
   return ttFetch(`/api/items/${id}`, { method: 'PATCH', body: JSON.stringify(data) });
+}
+
+export async function createSale(data) {
+  return ttFetch('/api/sales', { method: 'POST', body: JSON.stringify(data) });
+}
+
+export async function patchSale(id, data) {
+  return ttFetch(`/api/sales/${id}`, { method: 'PATCH', body: JSON.stringify(data) });
+}
+
+export async function confirmSale(id, data = {}) {
+  return ttFetch(`/api/sales/${id}/confirm`, { method: 'POST', body: JSON.stringify(data) });
 }
 
 /** Trigger a single batch of Gemini enrichment. Returns { enriched, failed, remaining, processed }. */

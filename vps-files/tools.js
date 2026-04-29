@@ -1,5 +1,26 @@
-import { analysePhotos, searchComps, generateListing, createItem, getStats, getItems, patchItem, searchChatImages } from './tt-api.js';
-import { formatEvaluation, formatQuickList, formatStats, formatStaleItems } from './formatter.js';
+import {
+  analysePhotos,
+  searchComps,
+  generateListing,
+  createItem,
+  buildValuation,
+  getStats,
+  getItems,
+  patchItem,
+  searchChatImages,
+  createSale,
+  patchSale,
+  confirmSale,
+} from './tt-api.js';
+import {
+  formatEvaluation,
+  formatQuickList,
+  formatStats,
+  formatStaleItems,
+  formatSaleDraft,
+  formatSaleUpdated,
+  formatSaleConfirmed,
+} from './formatter.js';
 import { tidyInventory, backfillFromVinted, enrichWithGemini, syncWithVinted } from './admin-tools.js';
 import { logTool } from './db.js';
 
@@ -23,15 +44,17 @@ async function dispatchTool(name, input) {
   switch (name) {
     case 'tt_evaluate_item': {
       const analysis = await analysePhotos(input.photoUrls);
-      const query = [analysis.brand, analysis.category, analysis.era].filter(Boolean).join(' ');
+      const query = marketQuery(analysis);
       const comps = query ? (await searchComps(query)).results : [];
-      return formatEvaluation(analysis, comps);
+      const valuation = await buildValuation(analysis, comps).catch(() => null);
+      return formatEvaluation(analysis, comps, valuation);
     }
 
     case 'tt_quick_list': {
       const analysis = await analysePhotos(input.photoUrls);
-      const query = [analysis.brand, analysis.category, analysis.era].filter(Boolean).join(' ');
+      const query = marketQuery(analysis);
       const compsRes = query ? await searchComps(query) : { results: [] };
+      const valuation = await buildValuation(analysis, compsRes.results, input.buyPrice ?? null).catch(() => null);
       const listing = await generateListing(analysis, compsRes.results);
       await createItem({
         photos: input.photoUrls,
@@ -50,7 +73,7 @@ async function dispatchTool(name, input) {
         buyPrice: input.buyPrice ?? null,
         status: 'draft',
       });
-      return formatQuickList(listing);
+      return formatQuickList({ ...listing, valuation });
     }
 
     case 'tt_stats': {
@@ -81,6 +104,36 @@ async function dispatchTool(name, input) {
       await patchItem(match.id, { buyPrice: input.buyPrice });
       const margin = match.listPrice ? match.listPrice - input.buyPrice : null;
       return `Updated *${match.title}* buy price to £${(input.buyPrice / 100).toFixed(2)}.${margin ? ` Est. margin: £${(margin / 100).toFixed(2)}` : ''}`;
+    }
+
+    case 'tt_start_sale_log': {
+      const item = await resolveSaleItem(input);
+      const draft = await createSale({
+        ...input,
+        itemId: input.itemId ?? item?.id ?? null,
+        buyPriceAtSale: input.buyPriceAtSale ?? item?.buyPrice ?? null,
+        source: 'whatsapp',
+      });
+      return formatSaleDraft(draft);
+    }
+
+    case 'tt_answer_sale_question': {
+      const item = await resolveSaleItem(input);
+      const patch = {
+        ...input,
+        itemId: input.itemId ?? item?.id,
+        buyPriceAtSale: input.buyPriceAtSale ?? item?.buyPrice,
+      };
+      delete patch.saleId;
+      delete patch.itemTitle;
+      removeUndefinedValues(patch);
+      const updated = await patchSale(input.saleId, patch);
+      return formatSaleUpdated({ sale: updated, missing: missingSaleFields(updated) });
+    }
+
+    case 'tt_confirm_sale_log': {
+      const confirmed = await confirmSale(input.saleId);
+      return formatSaleConfirmed(confirmed);
     }
 
     case 'tt_tidy_inventory': {
@@ -156,4 +209,31 @@ async function dispatchTool(name, input) {
     default:
       return `Unknown tool: ${name}`;
   }
+}
+
+function marketQuery(analysis) {
+  return [analysis.brand, analysis.category, analysis.era].filter(Boolean).join(' ');
+}
+
+function removeUndefinedValues(object) {
+  Object.keys(object).forEach((key) => {
+    if (object[key] === undefined) delete object[key];
+  });
+}
+
+async function resolveSaleItem(input) {
+  if (input.itemId) return null;
+  if (!input.itemTitle) return null;
+  const all = await getItems();
+  const needle = input.itemTitle.toLowerCase();
+  return all.find((i) => i.title?.toLowerCase().includes(needle)) ?? null;
+}
+
+function missingSaleFields(sale) {
+  const missing = [];
+  if (!sale.itemId) missing.push('which item sold');
+  if (sale.salePrice == null) missing.push('sale price');
+  if (!sale.soldAt) missing.push('sold date');
+  if (sale.buyPriceAtSale == null) missing.push('buy price');
+  return missing;
 }
