@@ -40,7 +40,11 @@ function EditablePrice({
 
   async function save() {
     const pounds = parseFloat(input);
-    if (isNaN(pounds) || pounds < 0) { setEditing(false); return; }
+    if (isNaN(pounds) || pounds < 0) {
+      setEditing(false);
+      return;
+    }
+
     const pence = Math.round(pounds * 100);
     setSaving(true);
     try {
@@ -68,8 +72,11 @@ function EditablePrice({
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onBlur={save}
-          onKeyDown={(e) => { if (e.key === 'Enter') save(); if (e.key === 'Escape') setEditing(false); }}
-          className="w-20 rounded border border-border bg-background px-1 py-0.5 text-right font-mono text-sm focus:outline-none focus:ring-1 focus:ring-ring"
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') save();
+            if (e.key === 'Escape') setEditing(false);
+          }}
+          className="w-24 rounded-full border border-input bg-card/70 px-3 py-1 text-right font-mono text-sm shadow-inner focus:outline-none focus:ring-2 focus:ring-ring"
           disabled={saving}
         />
       </div>
@@ -78,9 +85,11 @@ function EditablePrice({
 
   return (
     <button
+      type="button"
       onClick={startEdit}
       title="Click to edit"
-      className="w-full text-right font-mono text-sm [font-feature-settings:'tnum'] hover:underline decoration-dashed underline-offset-2 cursor-pointer"
+      aria-label={`Edit ${field === 'buyPrice' ? 'buy' : 'sold'} price`}
+      className="w-full cursor-pointer text-right font-mono text-sm font-semibold [font-feature-settings:'tnum'] decoration-dashed underline-offset-2 hover:text-primary hover:underline"
     >
       {formatPence(value)}
     </button>
@@ -106,11 +115,13 @@ export function SoldTable({ items: initialItems }: { items: Item[] }) {
 
   return (
     <div>
-      <p className="mb-2 text-[10px] text-muted-foreground">Click Buy or Sold price to edit it.</p>
+      <p className="section-kicker mb-2">Click Buy or Sold price to edit it.</p>
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead className="w-12"></TableHead>
+            <TableHead className="w-12">
+              <span className="sr-only">Photo</span>
+            </TableHead>
             <TableHead>Title</TableHead>
             <TableHead>Details</TableHead>
             <TableHead className="text-right font-mono">Buy</TableHead>
@@ -124,13 +135,13 @@ export function SoldTable({ items: initialItems }: { items: Item[] }) {
             return (
               <TableRow
                 key={item.id}
-                className="group border-b border-border transition-colors hover:bg-accent/40"
+                className="group transition-colors hover:bg-primary/5"
               >
                 <TableCell>
                   {item.photos.length > 0 ? (
-                    <img src={item.photos[0]} alt="" className="h-8 w-8 rounded object-cover opacity-70" />
+                    <img src={item.photos[0]} alt="" className="h-10 w-10 rounded-[var(--radius-sm)] object-cover opacity-80 shadow-sm" />
                   ) : (
-                    <div className="h-8 w-8 rounded bg-muted" />
+                    <div className="h-10 w-10 rounded-[var(--radius-sm)] bg-muted" />
                   )}
                 </TableCell>
                 <TableCell className="max-w-[200px] truncate text-sm text-muted-foreground">{item.title || 'Untitled'}</TableCell>
@@ -149,7 +160,7 @@ export function SoldTable({ items: initialItems }: { items: Item[] }) {
                 </TableCell>
                 <TableCell className="text-right font-mono text-sm [font-feature-settings:'tnum']">
                   {p ? (
-                    <span className={p.positive ? 'text-emerald-500' : 'text-destructive'}>{p.label}</span>
+                    <span className={p.positive ? 'font-bold text-primary' : 'text-destructive'}>{p.label}</span>
                   ) : (
                     <span className="text-muted-foreground/40 text-[10px]">add buy price</span>
                   )}

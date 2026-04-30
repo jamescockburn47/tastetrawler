@@ -71,8 +71,8 @@ export default async function DashboardPage() {
   return (
     <PageContainer>
       <PageHeader
-        title="Dashboard"
-        description="Sales, stock, and the items quietly embarrassing themselves."
+        title="Command Centre"
+        description="Sales, stock, profit, and the garments currently auditioning for public disgrace."
       />
       <div className="space-y-6">
         <DailyBriefing stats={stats} />

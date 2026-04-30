@@ -104,7 +104,9 @@ export function SalesReview({ rows: initialRows }: SalesReviewProps): JSX.Elemen
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead className="w-12"></TableHead>
+          <TableHead className="w-12">
+            <span className="sr-only">Photo</span>
+          </TableHead>
           <TableHead>Sale</TableHead>
           <TableHead>Status</TableHead>
           <TableHead className="text-right font-mono">Sold</TableHead>
@@ -118,7 +120,7 @@ export function SalesReview({ rows: initialRows }: SalesReviewProps): JSX.Elemen
           const p = profit(row);
           const soldDate = row.soldAt ? new Date(row.soldAt).toLocaleDateString('en-GB') : 'date needed';
           return (
-            <TableRow key={row.id}>
+            <TableRow key={row.id} className={row.status === 'needs_review' ? 'bg-primary/5' : undefined}>
               <TableCell>
                 {row.photo ? (
                   <img src={row.photo} alt="" className="h-9 w-9 rounded object-cover" />
@@ -144,25 +146,31 @@ export function SalesReview({ rows: initialRows }: SalesReviewProps): JSX.Elemen
               </TableCell>
               <TableCell className="text-right">
                 <input
-                  aria-label="Sale price"
+                  aria-label={`Sale price for ${row.title}`}
+                  type="number"
+                  min="0"
+                  step="0.01"
                   defaultValue={row.salePrice != null ? (row.salePrice / 100).toFixed(2) : ''}
                   onBlur={(e) => savePrice(row.id, 'salePrice', e.target.value)}
-                  className="w-20 rounded border border-border bg-background px-2 py-1 text-right font-mono text-sm"
+                  className="w-24 rounded-full border border-input bg-card/70 px-3 py-1 text-right font-mono text-sm shadow-inner focus:outline-none focus:ring-2 focus:ring-ring"
                 />
               </TableCell>
               <TableCell className="text-right">
                 <input
-                  aria-label="Buy price"
+                  aria-label={`Buy price for ${row.title}`}
+                  type="number"
+                  min="0"
+                  step="0.01"
                   defaultValue={row.buyPriceAtSale != null ? (row.buyPriceAtSale / 100).toFixed(2) : ''}
                   onBlur={(e) => savePrice(row.id, 'buyPriceAtSale', e.target.value)}
-                  className="w-20 rounded border border-border bg-background px-2 py-1 text-right font-mono text-sm"
+                  className="w-24 rounded-full border border-input bg-card/70 px-3 py-1 text-right font-mono text-sm shadow-inner focus:outline-none focus:ring-2 focus:ring-ring"
                 />
               </TableCell>
               <TableCell className="text-right font-mono text-sm">
                 {p == null ? (
                   <span className="text-muted-foreground">needs cost</span>
                 ) : (
-                  <span className={p >= 0 ? 'text-emerald-500' : 'text-destructive'}>
+                  <span className={p >= 0 ? 'font-bold text-primary' : 'text-destructive'}>
                     {formatPence(p)}
                   </span>
                 )}

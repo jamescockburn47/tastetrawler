@@ -1,4 +1,5 @@
 import { Card, CardContent } from '@/components/ui/card';
+import { cn } from '@/lib/utils';
 
 interface Stats {
   revenue30: number;
@@ -27,16 +28,17 @@ function KpiCard({
   label: string;
   value: string;
   sub?: string | null;
-  accent?: 'green' | 'muted';
+  accent?: 'green';
 }) {
   return (
-    <Card className="group rounded-[var(--radius)] border border-border bg-card transition-all duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-0.5 hover:shadow-lg">
+    <Card className="group relative overflow-hidden transition-all duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] before:absolute before:inset-x-0 before:top-0 before:h-1 before:bg-primary/70 hover:-translate-y-1 hover:shadow-xl">
       <CardContent className="p-4">
-        <p className="text-[10px] uppercase tracking-wider text-muted-foreground">{label}</p>
+        <p className="section-kicker">{label}</p>
         <p
-          className={`mt-1 font-mono text-xl font-semibold [font-feature-settings:'tnum'] ${
-            accent === 'green' ? 'text-emerald-500' : ''
-          }`}
+          className={cn(
+            "mt-1 font-mono text-2xl font-black [font-feature-settings:'tnum']",
+            accent === 'green' && 'text-primary',
+          )}
         >
           {value}
         </p>
@@ -60,7 +62,7 @@ export function KpiCards({ stats }: { stats: Stats }) {
   return (
     <div className="space-y-4">
       <div>
-        <p className="mb-2 text-[10px] uppercase tracking-wider text-muted-foreground">Last 30 days</p>
+        <p className="section-kicker mb-2">Last 30 days</p>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           <KpiCard
             label="Revenue"
@@ -86,7 +88,7 @@ export function KpiCards({ stats }: { stats: Stats }) {
       </div>
 
       <div>
-        <p className="mb-2 text-[10px] uppercase tracking-wider text-muted-foreground">All time</p>
+        <p className="section-kicker mb-2">All time</p>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
           <KpiCard
             label="Total revenue"

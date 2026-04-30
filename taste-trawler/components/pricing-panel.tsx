@@ -53,8 +53,9 @@ export function PricingPanel({
   const reasoning = valuation?.reasoning ?? priceReasoning;
 
   return (
-    <div className="rounded-md border border-amber-500/30 bg-amber-950/20 p-4 space-y-3">
-      <p className="text-[10px] font-semibold uppercase tracking-wider text-amber-400">Pricing Intelligence</p>
+    <div className="kitsch-card relative space-y-3 overflow-hidden rounded-[var(--radius-xl)] p-4">
+      <div className="gold-gloss absolute inset-x-0 top-0 h-1" aria-hidden />
+      <p className="section-kicker">Pricing Intelligence</p>
 
       <div className="flex gap-6">
         {quick != null && (
@@ -66,7 +67,7 @@ export function PricingPanel({
         {target != null && (
           <div>
             <p className="text-[10px] text-muted-foreground">RECOMMENDED</p>
-            <p className="font-mono text-lg font-semibold text-emerald-400">{formatPence(target)}</p>
+            <p className="font-mono text-lg font-black text-primary">{formatPence(target)}</p>
           </div>
         )}
         {patient != null && (
@@ -88,7 +89,7 @@ export function PricingPanel({
           {margin != null && (
             <div>
               <p className="text-[10px] text-muted-foreground">EST. MARGIN</p>
-              <p className="font-mono text-lg font-semibold text-amber-400">{formatPence(margin)}</p>
+              <p className="font-mono text-lg font-black text-accent-foreground">{formatPence(margin)}</p>
             </div>
           )}
         </div>
@@ -98,7 +99,7 @@ export function PricingPanel({
         <div className="flex items-start gap-2">
           {conf && (
             <span className="flex items-center gap-1 shrink-0">
-              <span className={`inline-block h-2 w-2 rounded-full ${conf.dot}`} />
+              <span aria-hidden className={`inline-block h-2 w-2 rounded-full ${conf.dot}`} />
               <span className="text-[10px] text-muted-foreground">{conf.label}</span>
             </span>
           )}
@@ -107,7 +108,7 @@ export function PricingPanel({
       )}
 
       {valuation?.risks?.length ? (
-        <div className="rounded-md border border-border/60 bg-background/50 p-2">
+        <div className="rounded-[var(--radius-lg)] border border-border/60 bg-card/65 p-2">
           <p className="text-[10px] text-muted-foreground mb-1">WATCH OUT</p>
           <ul className="space-y-1 text-xs text-muted-foreground">
             {valuation.risks.map((risk) => <li key={risk}>{risk}</li>)}
@@ -119,11 +120,12 @@ export function PricingPanel({
         <div>
           <p className="text-[10px] text-muted-foreground mb-1">BEST COMPS ({topComps.length})</p>
           <div className="space-y-1">
-            {topComps.slice(0, 8).map((comp, i) => {
+            {topComps.slice(0, 8).map((comp) => {
               const score = compScore(comp);
+              const compKey = `${comp.platform}-${comp.url}-${comp.title}-${comp.price}`;
 
               return (
-                <div key={i} className="flex items-center justify-between text-xs gap-2">
+                <div key={compKey} className="flex items-center justify-between text-xs gap-2">
                   <div className="flex items-center gap-1.5 min-w-0">
                     <span className={`text-[9px] font-bold px-1 rounded ${platformBadge[comp.platform].bg}`}>
                       {platformBadge[comp.platform].label}
@@ -134,7 +136,7 @@ export function PricingPanel({
                     <a
                       href={comp.url}
                       target="_blank"
-                      rel="noopener"
+                      rel="noopener noreferrer"
                       className="truncate text-muted-foreground hover:text-foreground"
                     >
                       {comp.title}

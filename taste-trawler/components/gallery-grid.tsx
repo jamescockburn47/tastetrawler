@@ -1,9 +1,10 @@
 'use client';
 
 import { useState } from 'react';
+import type { KeyboardEvent } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { EmptyState } from '@/components/empty-state';
 import type { ChatImage } from '@/lib/db/schema';
 
@@ -20,6 +21,13 @@ function timeAgo(date: Date | string | null): string {
 
 export function GalleryGrid({ images }: { images: ChatImage[] }) {
   const [selected, setSelected] = useState<ChatImage | null>(null);
+
+  function openImageFromKeyboard(event: KeyboardEvent<HTMLDivElement>, image: ChatImage) {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      setSelected(image);
+    }
+  }
 
   if (!images?.length) {
     return (
@@ -39,8 +47,11 @@ export function GalleryGrid({ images }: { images: ChatImage[] }) {
         {images.map((img) => (
           <Card
             key={img.id}
-            className="group cursor-pointer overflow-hidden border-border/60 transition-colors hover:border-border"
+            role="button"
+            tabIndex={0}
+            className="group cursor-pointer overflow-hidden transition-all hover:-translate-y-1 hover:shadow-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
             onClick={() => setSelected(img)}
+            onKeyDown={(event) => openImageFromKeyboard(event, img)}
           >
             <div className="relative aspect-square">
               <img
@@ -51,7 +62,7 @@ export function GalleryGrid({ images }: { images: ChatImage[] }) {
               />
             </div>
             <div className="p-2">
-              <p className="line-clamp-2 text-xs text-muted-foreground">
+              <p className="line-clamp-2 text-xs font-medium text-muted-foreground">
                 {img.caption || img.vlmDescription?.slice(0, 100) || 'No description'}
               </p>
               <p className="mt-1 text-[10px] text-muted-foreground/60">
@@ -63,17 +74,20 @@ export function GalleryGrid({ images }: { images: ChatImage[] }) {
       </div>
 
       <Dialog open={!!selected} onOpenChange={(open) => !open && setSelected(null)}>
-        <DialogContent className="max-w-2xl p-0 overflow-hidden">
+        <DialogContent className="max-w-2xl overflow-hidden border-primary/25 bg-card p-0">
           {selected && (
             <div className="flex flex-col md:flex-row">
-              <div className="md:w-1/2 bg-black flex items-center justify-center">
+              <DialogTitle className="sr-only">
+                {selected.caption || selected.vlmDescription?.slice(0, 80) || 'Photo details'}
+              </DialogTitle>
+              <div className="flex items-center justify-center bg-black md:w-1/2">
                 <img
                   src={selected.blobUrl}
                   alt=""
                   className="max-h-[70vh] w-full object-contain"
                 />
               </div>
-              <div className="md:w-1/2 p-4 space-y-3 overflow-y-auto max-h-[70vh]">
+              <div className="max-h-[70vh] space-y-3 overflow-y-auto p-4 md:w-1/2">
                 {selected.speakerName && (
                   <p className="text-xs text-muted-foreground">
                     {selected.speakerName} · {timeAgo(selected.observedAt)}
@@ -84,7 +98,6 @@ export function GalleryGrid({ images }: { images: ChatImage[] }) {
                   <p className="text-sm font-medium">{selected.caption}</p>
                 )}
 
-                {/* VLM structured analysis */}
                 {analysis && (
                   <div className="space-y-2">
                     <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Analysis</p>
@@ -118,7 +131,6 @@ export function GalleryGrid({ images }: { images: ChatImage[] }) {
                   </div>
                 )}
 
-                {/* VLM prose description */}
                 {selected.vlmDescription && (
                   <div>
                     <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">VLM Description</p>
@@ -126,7 +138,6 @@ export function GalleryGrid({ images }: { images: ChatImage[] }) {
                   </div>
                 )}
 
-                {/* Tags */}
                 {selected.tags && selected.tags.length > 0 && (
                   <div className="flex flex-wrap gap-1">
                     {selected.tags.map((tag) => (
@@ -135,7 +146,6 @@ export function GalleryGrid({ images }: { images: ChatImage[] }) {
                   </div>
                 )}
 
-                {/* Discussion log */}
                 {selected.discussion && (
                   <div>
                     <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">Discussion</p>

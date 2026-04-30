@@ -34,7 +34,9 @@ export function ItemTable({ items }: { items: Item[] }) {
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead className="w-12"></TableHead>
+          <TableHead className="w-12">
+            <span className="sr-only">Photo</span>
+          </TableHead>
           <TableHead>Title</TableHead>
           <TableHead>Details</TableHead>
           <TableHead>Status</TableHead>
@@ -49,13 +51,13 @@ export function ItemTable({ items }: { items: Item[] }) {
         {items.map((item) => (
           <TableRow
             key={item.id}
-            className="group border-b border-border transition-colors hover:bg-accent/40 focus-within:bg-accent/40"
+            className="group transition-colors hover:bg-primary/5 focus-within:bg-primary/5"
           >
             <TableCell>
               {item.photos.length > 0 ? (
-                <img src={item.photos[0]} alt="" className="h-8 w-8 rounded object-cover" />
+                <img src={item.photos[0]} alt="" className="h-10 w-10 rounded-[var(--radius-sm)] object-cover shadow-sm" />
               ) : (
-                <div className="h-8 w-8 rounded bg-muted" />
+                <div className="h-10 w-10 rounded-[var(--radius-sm)] bg-muted" />
               )}
             </TableCell>
             <TableCell className="max-w-[200px] truncate text-sm">{item.title || 'Untitled'}</TableCell>

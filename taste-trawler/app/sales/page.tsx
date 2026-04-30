@@ -37,11 +37,11 @@ export default async function SalesPage() {
   return (
     <PageContainer>
       <PageHeader
-        title="Sales"
+        title="Sales Ledger"
         description={
           needsReview
-            ? `${needsReview} sale${needsReview === 1 ? '' : 's'} need a human eyebrow before they hit the numbers.`
-            : 'Confirmed sales, tidy numbers, minimal accounting theatre.'
+            ? `${needsReview} sale${needsReview === 1 ? '' : 's'} need a human eyebrow before they hit the numbers. Bring receipts.`
+            : 'Confirmed sales, tidy numbers, minimal accounting theatre. Disturbingly mature.'
         }
       />
       <SalesReview rows={rows} />

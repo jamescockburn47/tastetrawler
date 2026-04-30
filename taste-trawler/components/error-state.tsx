@@ -21,12 +21,12 @@ export function ErrorState({
     <div
       role="alert"
       className={cn(
-        'flex flex-col items-start gap-3 rounded-[var(--radius)] border border-destructive/30 bg-destructive/5 px-6 py-6',
+        'kitsch-card-quiet flex flex-col items-start gap-3 rounded-[var(--radius-xl)] border-destructive/35 bg-destructive/10 px-6 py-6',
         className,
       )}
     >
       <div className="space-y-1">
-        <p className="text-base font-medium text-foreground">{title}</p>
+        <p className="font-[family-name:var(--font-display)] text-xl font-semibold uppercase text-foreground">{title}</p>
         {description && (
           <p className="text-sm text-muted-foreground">{description}</p>
         )}
@@ -35,7 +35,7 @@ export function ErrorState({
         <button
           type="button"
           onClick={retry}
-          className="mt-1 inline-flex h-9 items-center justify-center rounded-[var(--radius-md)] border border-border bg-background px-4 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+          className="mt-1 inline-flex h-9 items-center justify-center rounded-full border border-primary/25 bg-card px-4 text-sm font-bold transition-colors hover:bg-primary hover:text-primary-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
         >
           Try again
         </button>

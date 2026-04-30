@@ -111,8 +111,8 @@ export default function WorkbenchPage() {
   return (
     <PageContainer>
       <PageHeader
-        title="Listing Studio"
-        description="Photos in, Vinted listing out. Ideally with fewer crimes against pricing."
+        title="Listing Atelier"
+        description="Photos in, pricing sermon out. Glamour, maths, and only light emotional damage."
       />
       <div className="space-y-6">
         {stage === 'upload' && (
@@ -122,9 +122,12 @@ export default function WorkbenchPage() {
           </div>
         )}
         {stage === 'analysing' && (
-          <p className="text-sm text-muted-foreground">
-            Analysing photos, judging comps, preparing a tiny pricing sermon...
-          </p>
+          <div className="kitsch-card-quiet rounded-[var(--radius-xl)] p-6">
+            <p className="section-kicker">AI rummaging</p>
+            <p className="mt-2 text-sm font-medium text-muted-foreground">
+              Analysing photos, judging comps, preparing a tiny pricing sermon...
+            </p>
+          </div>
         )}
         {stage === 'editing' && listing && analysis && (
           <div className="grid gap-6 lg:grid-cols-2">

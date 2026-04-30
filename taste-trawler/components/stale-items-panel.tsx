@@ -21,22 +21,30 @@ export function StaleItemsPanel({ items }: { items: Item[] }) {
   return (
     <Card>
       <CardHeader className="pb-3">
-        <CardTitle className="text-sm font-medium">Needs Attention</CardTitle>
+        <p className="section-kicker">Stock drama</p>
+        <CardTitle className="font-[family-name:var(--font-display)] text-2xl uppercase">
+          Needs Attention
+        </CardTitle>
       </CardHeader>
       <CardContent className="space-y-2">
-        {items.map((item) => (
-          <div key={item.id} className="flex items-center justify-between rounded-md bg-muted/50 px-3 py-2">
-            <div>
-              <p className="text-sm">{item.title || 'Untitled'}</p>
-              <p className="text-[10px] text-muted-foreground">
-                Listed {daysSince(item.listedAt!)}d · {item.views} views · {item.likes} likes
-              </p>
+        {items.map((item) => {
+          const views = item.views ?? 0;
+          const likes = item.likes ?? 0;
+
+          return (
+            <div key={item.id} className="flex items-center justify-between rounded-[var(--radius-lg)] border border-primary/10 bg-card/65 px-3 py-2">
+              <div>
+                <p className="text-sm font-semibold">{item.title || 'Untitled'}</p>
+                <p className="text-[10px] text-muted-foreground">
+                  Listed {daysSince(item.listedAt!)}d · {views} views · {likes} likes
+                </p>
+              </div>
+              <Badge variant="outline" className="text-[10px]">
+                {likes === 0 && views < 20 ? 'Relist?' : 'Reprice?'}
+              </Badge>
             </div>
-            <Badge variant="outline" className="text-[10px]">
-              {item.likes === 0 && item.views! < 20 ? 'Relist?' : 'Reprice?'}
-            </Badge>
-          </div>
-        ))}
+          );
+        })}
       </CardContent>
     </Card>
   );

@@ -2,8 +2,8 @@ import { PageContainer, PageHeader } from '@/components/page-container';
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <section className="space-y-3">
-      <h2 className="text-base font-semibold">{title}</h2>
+    <section className="kitsch-card-quiet space-y-3 rounded-[var(--radius-xl)] p-5">
+      <h2 className="font-[family-name:var(--font-display)] text-xl font-semibold uppercase">{title}</h2>
       {children}
     </section>
   );
@@ -12,7 +12,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 function Command({ text, desc }: { text: string; desc: string }) {
   return (
     <div className="flex flex-col gap-0.5 sm:flex-row sm:items-baseline sm:gap-4">
-      <code className="shrink-0 rounded bg-muted px-2 py-0.5 font-mono text-sm">{text}</code>
+      <code className="shrink-0 rounded-full border border-primary/20 bg-primary/10 px-3 py-1 font-mono text-sm font-semibold text-foreground">{text}</code>
       <span className="text-sm text-muted-foreground">{desc}</span>
     </div>
   );
@@ -20,7 +20,7 @@ function Command({ text, desc }: { text: string; desc: string }) {
 
 function Note({ children }: { children: React.ReactNode }) {
   return (
-    <p className="rounded border border-border bg-muted/40 px-3 py-2 text-sm text-muted-foreground">
+    <p className="rounded-[var(--radius-lg)] border border-primary/20 bg-primary/5 px-3 py-2 text-sm font-medium text-muted-foreground">
       {children}
     </p>
   );
@@ -30,10 +30,10 @@ export default function HowToPage() {
   return (
     <PageContainer>
       <PageHeader
-        title="How To"
-        description="Everything you can do with Taste Trawler — bot and website."
+        title="The Manual"
+        description="Everything the bot and website can do, because chaos is better with instructions."
       />
-      <div className="max-w-2xl space-y-10">
+      <div className="max-w-3xl space-y-5">
 
         <Section title="Evaluating an item">
           <p className="text-sm text-muted-foreground">

@@ -15,19 +15,60 @@ interface ListingEditorProps {
   category: string;
   condition: string;
   suggestedPrice: number | null;
-  onSave: (data: { title: string; description: string; listPrice: number; buyPrice: number | null; status: string }) => Promise<void> | void;
+  onSave: (data: {
+    title: string;
+    description: string;
+    listPrice: number;
+    buyPrice: number | null;
+    status: string;
+  }) => Promise<void> | void;
   onCopyToClipboard: () => void;
   saving: boolean;
 }
 
-export function ListingEditor({ title: initialTitle, description: initialDescription, brand, category, condition, suggestedPrice, onSave, onCopyToClipboard, saving }: ListingEditorProps) {
+function priceToPence(price: string): number {
+  return Math.round(parseFloat(price) * 100);
+}
+
+export function ListingEditor({
+  title: initialTitle,
+  description: initialDescription,
+  brand,
+  category,
+  condition,
+  suggestedPrice,
+  onSave,
+  onCopyToClipboard,
+  saving,
+}: ListingEditorProps) {
   const [title, setTitle] = useState(initialTitle);
   const [description, setDescription] = useState(initialDescription);
   const [listPrice, setListPrice] = useState(suggestedPrice ? (suggestedPrice / 100).toFixed(2) : '');
   const [buyPrice, setBuyPrice] = useState('');
 
+  async function handleSave() {
+    try {
+      await onSave({
+        title,
+        description,
+        listPrice: priceToPence(listPrice),
+        buyPrice: buyPrice ? priceToPence(buyPrice) : null,
+        status: 'draft',
+      });
+      toast.success('Saved. The inventory goblin has been fed.');
+    } catch {
+      toast.error('Could not save it. Deeply annoying. Please try again.');
+    }
+  }
+
   return (
-    <div className="space-y-4">
+    <div className="kitsch-card-quiet space-y-4 rounded-[var(--radius-xl)] p-5">
+      <div>
+        <p className="section-kicker">Listing atelier</p>
+        <h2 className="font-[family-name:var(--font-display)] text-2xl uppercase tracking-tight">
+          Polish the goods
+        </h2>
+      </div>
       <div className="flex gap-2">
         {brand && <Badge variant="outline" className="text-[10px]">{brand}</Badge>}
         <Badge variant="outline" className="text-[10px]">{category}</Badge>
@@ -51,22 +92,9 @@ export function ListingEditor({ title: initialTitle, description: initialDescrip
           <Input id="listPrice" type="number" step="0.01" value={listPrice} onChange={(e) => setListPrice(e.target.value)} />
         </div>
       </div>
-      <div className="flex gap-2">
+      <div className="flex flex-col gap-2 sm:flex-row">
         <Button
-          onClick={async () => {
-            try {
-              await onSave({
-                title,
-                description,
-                listPrice: Math.round(parseFloat(listPrice) * 100),
-                buyPrice: buyPrice ? Math.round(parseFloat(buyPrice) * 100) : null,
-                status: 'draft',
-              });
-              toast.success('Saved. The inventory goblin has been fed.');
-            } catch {
-              toast.error('Could not save it. Deeply annoying. Please try again.');
-            }
-          }}
+          onClick={handleSave}
           disabled={saving}
           className="flex-1"
         >

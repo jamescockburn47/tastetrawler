@@ -16,8 +16,8 @@ export default async function GalleryPage() {
   return (
     <PageContainer>
       <PageHeader
-        title="Gallery"
-        description="Photos from the WhatsApp group, with VLM analysis."
+        title="Evidence Wall"
+        description="WhatsApp photos, AI notes, and the visual trail of every potential little money goblin."
       />
       <GalleryGrid images={images} />
     </PageContainer>

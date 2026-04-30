@@ -16,18 +16,18 @@ export default async function InventoryPage() {
   return (
     <PageContainer>
       <PageHeader
-        title="Inventory"
-        description="Active listings and sold stock."
+        title="The Rails"
+        description="Active listings, sold stock, and the odd item still waiting for its main character moment."
       />
       <div className="space-y-10">
         <section>
-          <h2 className="mb-3 text-sm font-medium text-muted-foreground uppercase tracking-wider">
+          <h2 className="section-kicker mb-3">
             Active — {active.length} items
           </h2>
           <ItemTable items={active} />
         </section>
         <section>
-          <h2 className="mb-3 text-sm font-medium text-muted-foreground uppercase tracking-wider">
+          <h2 className="section-kicker mb-3">
             Sold — {sold.length} items
           </h2>
           <SoldTable items={sold} />

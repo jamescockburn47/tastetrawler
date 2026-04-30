@@ -30,11 +30,11 @@ export default async function RootLayout({
           <style dangerouslySetInnerHTML={{ __html: cssOverrides }} />
         </head>
         <body
-          className={`${GeistSans.variable} ${GeistMono.variable} ${malibuDisplay.variable} ${leopardDisplay.variable} font-sans antialiased bg-background text-foreground`}
+          className={`${GeistSans.variable} ${GeistMono.variable} ${malibuDisplay.variable} ${leopardDisplay.variable} kitsch-shell font-sans antialiased bg-background text-foreground`}
         >
           <Providers>
             <Nav />
-            <main className="mx-auto max-w-[var(--container-max)] px-[var(--container-pad-sm)] md:px-[var(--container-pad-md)] lg:px-[var(--container-pad-lg)] py-6">
+            <main className="py-6 md:py-8">
               {children}
             </main>
           </Providers>

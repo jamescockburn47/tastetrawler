@@ -23,17 +23,17 @@ export function EmptyState({
     <div
       role="status"
       className={cn(
-        'flex flex-col items-center justify-center gap-4 rounded-[var(--radius)] border border-dashed border-border bg-muted/30 px-6 py-12 text-center',
+        'kitsch-card-quiet flex flex-col items-center justify-center gap-4 rounded-[var(--radius-xl)] border-dashed px-6 py-12 text-center',
         className,
       )}
     >
       {illustration && (
-        <div className="flex h-16 w-16 items-center justify-center text-4xl text-muted-foreground">
+        <div className="leopard-panel flex h-16 w-16 items-center justify-center rounded-full text-4xl text-primary-foreground shadow-md">
           {illustration}
         </div>
       )}
       <div className="max-w-md space-y-1">
-        <p className="text-base font-medium text-foreground">{title}</p>
+        <p className="font-[family-name:var(--font-display)] text-xl font-semibold uppercase text-foreground">{title}</p>
         {description && (
           <p className="text-sm text-muted-foreground">{description}</p>
         )}
