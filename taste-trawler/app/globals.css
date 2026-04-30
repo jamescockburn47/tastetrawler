@@ -125,6 +125,10 @@
   --kitsch-gold: oklch(0.82 0.16 82);
   --kitsch-camel: oklch(0.72 0.115 58);
   --kitsch-shadow: 0 24px 60px oklch(0.2 0.08 20 / 18%);
+  --leopard-ground: oklch(0.93 0.075 350);
+  --leopard-ground-hot: oklch(0.75 0.22 355);
+  --leopard-ink: oklch(0.25 0.08 355);
+  --leopard-rosettes: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180' viewBox='0 0 180 180'%3E%3Cg fill='none' stroke='%23000' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath stroke-width='8' d='M24 34c10-14 31-12 38 1 5 10-1 24-13 29-12 4-28-1-33-12'/%3E%3Cpath stroke-width='6' d='M41 24c12 1 22 9 25 20'/%3E%3Cpath stroke-width='7' d='M119 16c15-4 31 8 31 23 0 12-10 22-24 23-14 1-25-6-29-17'/%3E%3Cpath stroke-width='5' d='M149 48c-4 10-13 17-24 18'/%3E%3Cpath stroke-width='9' d='M72 96c-6-17 8-33 25-32 15 1 27 13 26 28-1 13-12 24-26 26-10 1-19-3-25-10'/%3E%3Cpath stroke-width='5' d='M83 69c9-6 23-5 32 2'/%3E%3Cpath stroke-width='7' d='M143 105c14 1 24 12 22 25-2 14-17 23-31 18-10-4-16-13-14-24'/%3E%3Cpath stroke-width='5' d='M128 111c5-7 13-11 22-10'/%3E%3Cpath stroke-width='8' d='M20 126c9-10 25-11 34-2 8 8 8 22 0 30-8 8-22 10-32 4'/%3E%3Cpath stroke-width='5' d='M14 143c0-8 4-16 11-21'/%3E%3Cpath stroke-width='5' d='M24 82c7-5 17-4 23 2'/%3E%3Cpath stroke-width='5' d='M154 78c7 3 11 10 10 18'/%3E%3Cpath stroke-width='4' d='M84 150c8-4 18-3 25 3'/%3E%3C/g%3E%3C/svg%3E");
   --font-display: var(--font-display-malibu);
 }
 
@@ -252,23 +256,20 @@
     background:
       radial-gradient(circle at top left, oklch(0.72 0.24 355 / 28%), transparent 32rem),
       radial-gradient(circle at 85% 10%, oklch(0.82 0.16 82 / 22%), transparent 26rem),
-      linear-gradient(135deg, var(--background), oklch(0.99 0.018 65));
+      linear-gradient(135deg, var(--leopard-ground), oklch(0.99 0.018 65));
   }
 
   body::before {
     position: fixed;
     inset: 0;
-    z-index: -2;
+    z-index: -1;
     pointer-events: none;
     content: "";
-    background:
-      radial-gradient(circle at 18% 22%, oklch(0.16 0.04 35 / 20%) 0 0.34rem, transparent 0.36rem),
-      radial-gradient(circle at 34% 72%, oklch(0.16 0.04 35 / 16%) 0 0.26rem, transparent 0.28rem),
-      radial-gradient(ellipse at 78% 34%, oklch(0.5 0.12 50 / 22%) 0 0.42rem, transparent 0.44rem),
-      radial-gradient(ellipse at 65% 82%, oklch(0.5 0.12 50 / 18%) 0 0.32rem, transparent 0.34rem);
-    background-size: 7rem 7rem;
-    opacity: 0.32;
-    mask-image: linear-gradient(to bottom, black, transparent 70%);
+    background: var(--leopard-ink);
+    mask-image: var(--leopard-rosettes);
+    mask-repeat: repeat;
+    mask-size: 10rem 10rem;
+    opacity: 0.22;
   }
 }
 
@@ -306,12 +307,22 @@
   }
 
   .leopard-panel {
+    position: relative;
+    overflow: hidden;
     background:
-      radial-gradient(circle at 18% 24%, oklch(0.13 0.04 35 / 72%) 0 0.24rem, transparent 0.26rem),
-      radial-gradient(ellipse at 72% 22%, oklch(0.38 0.1 45 / 68%) 0 0.36rem, transparent 0.38rem),
-      radial-gradient(circle at 44% 68%, oklch(0.15 0.04 35 / 62%) 0 0.18rem, transparent 0.2rem),
-      linear-gradient(135deg, oklch(0.76 0.13 58), oklch(0.92 0.09 78));
-    background-size: 5.5rem 5.5rem;
+      linear-gradient(135deg, var(--leopard-ground-hot), var(--leopard-ground) 58%, oklch(0.98 0.06 35));
+  }
+
+  .leopard-panel::before {
+    position: absolute;
+    inset: -12%;
+    pointer-events: none;
+    content: "";
+    background: var(--leopard-ink);
+    mask-image: var(--leopard-rosettes);
+    mask-repeat: repeat;
+    mask-size: 8rem 8rem;
+    opacity: 0.72;
   }
 
   .gold-gloss {
