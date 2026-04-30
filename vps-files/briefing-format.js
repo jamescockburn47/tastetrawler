@@ -1,8 +1,9 @@
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 function money(pence) {
-  if (typeof pence !== 'number') return 'unknown';
-  return `£${(pence / 100).toFixed(2)}`;
+  const value = typeof pence === 'string' ? Number(pence) : pence;
+  if (typeof value !== 'number' || !Number.isFinite(value)) return 'unknown';
+  return `£${(value / 100).toFixed(2)}`;
 }
 
 function plural(count, singular, pluralForm = `${singular}s`) {
