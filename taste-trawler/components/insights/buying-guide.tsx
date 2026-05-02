@@ -130,7 +130,7 @@ export function BuyingGuide() {
               <div className="h-2 bg-secondary rounded-full overflow-hidden">
                 <div 
                   className="h-full bg-primary rounded-full" 
-                  style={{ width: \`\${(d.value / maxFaves) * 100}%\` }}
+                  style={{ width: `${(d.value / maxFaves) * 100}%` }}
                 />
               </div>
             </div>
